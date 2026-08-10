@@ -39,10 +39,15 @@ def init_db():
         CREATE TABLE IF NOT EXISTS users (
             id SERIAL PRIMARY KEY,
             username TEXT UNIQUE NOT NULL,
+            email TEXT UNIQUE NOT NULL,
+            mobile_number TEXT NOT NULL,
             password_hash TEXT NOT NULL,
             best_score INTEGER NOT NULL DEFAULT 0
         );
     """)
+    # Agar purana table pehle se bina email/mobile ke bana hua hai, to columns add kar do
+    cur.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS email TEXT;")
+    cur.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS mobile_number TEXT;")
     cur.execute("""
         CREATE TABLE IF NOT EXISTS notes (
             id SERIAL PRIMARY KEY,
@@ -70,23 +75,31 @@ def login_required(f):
 def register():
     if request.method == "POST":
         username = request.form["username"].strip()
+        email = request.form.get("email", "").strip()
+        mobile_number = request.form.get("mobile_number", "").strip()
         password = request.form["password"]
 
-        if not username or not password:
+        if not username or not email or not mobile_number or not password:
             return render_template("register.html", error="Sabhi field zaroori hain.")
+
+        if not mobile_number.isdigit() or len(mobile_number) != 10:
+            return render_template("register.html", error="Mobile number 10 digit ka hona chahiye.")
 
         conn = get_db()
         cur = conn.cursor()
-        cur.execute("SELECT id FROM users WHERE username = %s", (username,))
+        cur.execute(
+            "SELECT id FROM users WHERE username = %s OR email = %s",
+            (username, email),
+        )
         existing = cur.fetchone()
         if existing:
             cur.close()
             conn.close()
-            return render_template("register.html", error="Ye username pehle se hai.")
+            return render_template("register.html", error="Ye username ya email pehle se hai.")
 
         cur.execute(
-            "INSERT INTO users (username, password_hash) VALUES (%s, %s)",
-            (username, generate_password_hash(password)),
+            "INSERT INTO users (username, email, mobile_number, password_hash) VALUES (%s, %s, %s, %s)",
+            (username, email, mobile_number, generate_password_hash(password)),
         )
         conn.commit()
         cur.close()
@@ -100,7 +113,7 @@ def register():
 def login():
     if request.method == "POST":
         username = request.form["username"].strip()
-        password = request.form["password"].strip()
+        password = request.form["password"]
 
         conn = get_db()
         cur = conn.cursor()
@@ -108,8 +121,6 @@ def login():
         user = cur.fetchone()
         cur.close()
         conn.close()
-
-        print(f"DEBUG: username={username!r}, user_found={user is not None}")
 
         if user is None or not check_password_hash(user["password_hash"], password):
             return render_template("login.html", error="Galat username ya password.")
