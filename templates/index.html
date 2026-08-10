@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Home{% endblock %}
+{% block content %}
+<div class="home-card">
+    <h2>Namaste, {{ username }}!</h2>
+    <p>Ek category chunein aur quiz shuru karein.</p>
+</div>
+<div class="category-grid">
+    <a href="{{ url_for('quiz', category='teaching') }}" class="category-card teaching">
+        <span class="cat-icon">📚</span><span class="cat-name">Teaching</span>
+    </a>
+    <a href="{{ url_for('quiz', category='sports') }}" class="category-card sports">
+        <span class="cat-icon">⚽</span><span class="cat-name">Sports</span>
+    </a>
+    <a href="{{ url_for('quiz', category='music') }}" class="category-card music">
+        <span class="cat-icon">🎵</span><span class="cat-name">Music</span>
+    </a>
+    <a href="{{ url_for('quiz', category='physical') }}" class="category-card physical">
+        <span class="cat-icon">💪</span><span class="cat-name">Physical</span>
+    </a>
+</div>
+{% endblock %}
