@@ -1,16 +1,19 @@
-import sqlite3
+import os
 import json
 from functools import wraps
 from pathlib import Path
 from flask import Flask, render_template, request, redirect, url_for, session, abort
 from werkzeug.security import generate_password_hash, check_password_hash
+import psycopg2
+import psycopg2.extras
 
 app = Flask(__name__)
-app.secret_key = "change-this-secret-key"
-DB_PATH = "quiz.db"
+app.secret_key = os.environ.get("SECRET_KEY", "dev-fallback-key-change-me")
 
-TIME_PER_QUESTION = 10  # seconds
-CHECKPOINT_EVERY = 10   # har 10 sawal ke baad checkpoint
+DATABASE_URL = os.environ.get("DATABASE_URL")
+
+TIME_PER_QUESTION = 10
+CHECKPOINT_EVERY = 10
 
 QUESTIONS_BY_CATEGORY = json.loads(
     (Path(__file__).parent / "static" / "questions.json").read_text(encoding="utf-8")
@@ -25,32 +28,32 @@ CATEGORY_LABELS = {
 
 
 def get_db():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
+    conn = psycopg2.connect(DATABASE_URL, cursor_factory=psycopg2.extras.RealDictCursor)
     return conn
 
 
 def init_db():
     conn = get_db()
-    conn.executescript(
-        """
+    cur = conn.cursor()
+    cur.execute("""
         CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             username TEXT UNIQUE NOT NULL,
             password_hash TEXT NOT NULL,
             best_score INTEGER NOT NULL DEFAULT 0
         );
+    """)
+    cur.execute("""
         CREATE TABLE IF NOT EXISTS notes (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER NOT NULL,
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER NOT NULL REFERENCES users(id),
             username TEXT NOT NULL,
             text TEXT NOT NULL,
-            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users (id)
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
-        """
-    )
+    """)
     conn.commit()
+    cur.close()
     conn.close()
 
 
@@ -73,16 +76,20 @@ def register():
             return render_template("register.html", error="Sabhi field zaroori hain.")
 
         conn = get_db()
-        existing = conn.execute("SELECT id FROM users WHERE username = ?", (username,)).fetchone()
+        cur = conn.cursor()
+        cur.execute("SELECT id FROM users WHERE username = %s", (username,))
+        existing = cur.fetchone()
         if existing:
+            cur.close()
             conn.close()
             return render_template("register.html", error="Ye username pehle se hai.")
 
-        conn.execute(
-            "INSERT INTO users (username, password_hash) VALUES (?, ?)",
+        cur.execute(
+            "INSERT INTO users (username, password_hash) VALUES (%s, %s)",
             (username, generate_password_hash(password)),
         )
         conn.commit()
+        cur.close()
         conn.close()
         return redirect(url_for("login"))
 
@@ -96,7 +103,10 @@ def login():
         password = request.form["password"]
 
         conn = get_db()
-        user = conn.execute("SELECT * FROM users WHERE username = ?", (username,)).fetchone()
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM users WHERE username = %s", (username,))
+        user = cur.fetchone()
+        cur.close()
         conn.close()
 
         if user is None or not check_password_hash(user["password_hash"], password):
@@ -145,11 +155,9 @@ def question():
     if request.method == "POST":
         action = request.form.get("action")
 
-        # "Continue" ya "Next" button se aaya hai — bas aage badho
         if action in ("continue", "next"):
             pass
         else:
-            # jawab submit hua hai (ya timer khatam hua)
             selected = request.form.get("option")
             correct_answer = quiz_list[q_index]["answer"]
             is_correct = (selected == correct_answer)
@@ -164,7 +172,6 @@ def question():
             q_index += 1
             session["q_index"] = q_index
 
-            # checkpoint dikhana hai kya (aur ye last sawal na ho)?
             if q_index % CHECKPOINT_EVERY == 0 and q_index < len(quiz_list):
                 return render_template(
                     "checkpoint.html",
@@ -184,10 +191,16 @@ def question():
     if q_index >= len(quiz_list):
         final_score = session.get("score", 0)
         conn = get_db()
-        user = conn.execute("SELECT * FROM users WHERE id = ?", (session["user_id"],)).fetchone()
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM users WHERE id = %s", (session["user_id"],))
+        user = cur.fetchone()
         if final_score > user["best_score"]:
-            conn.execute("UPDATE users SET best_score = ? WHERE id = ?", (final_score, session["user_id"]))
+            cur.execute(
+                "UPDATE users SET best_score = %s WHERE id = %s",
+                (final_score, session["user_id"]),
+            )
             conn.commit()
+        cur.close()
         conn.close()
         return render_template("result.html", score=final_score, total=len(quiz_list))
 
@@ -216,18 +229,21 @@ def notes():
             error = "Note likhna zaroori hai."
         else:
             conn = get_db()
-            conn.execute(
-                "INSERT INTO notes (user_id, username, text) VALUES (?, ?, ?)",
+            cur = conn.cursor()
+            cur.execute(
+                "INSERT INTO notes (user_id, username, text) VALUES (%s, %s, %s)",
                 (session["user_id"], session["username"], text),
             )
             conn.commit()
+            cur.close()
             conn.close()
             return redirect(url_for("notes"))
 
     conn = get_db()
-    all_notes = conn.execute(
-        "SELECT * FROM notes ORDER BY created_at DESC LIMIT 50"
-    ).fetchall()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM notes ORDER BY created_at DESC LIMIT 50")
+    all_notes = cur.fetchall()
+    cur.close()
     conn.close()
 
     return render_template("notes.html", notes=all_notes, error=error)
@@ -237,9 +253,10 @@ def notes():
 @login_required
 def leaderboard():
     conn = get_db()
-    top_users = conn.execute(
-        "SELECT username, best_score FROM users ORDER BY best_score DESC LIMIT 20"
-    ).fetchall()
+    cur = conn.cursor()
+    cur.execute("SELECT username, best_score FROM users ORDER BY best_score DESC LIMIT 20")
+    top_users = cur.fetchall()
+    cur.close()
     conn.close()
     return render_template("leaderboard.html", top_users=top_users)
 
