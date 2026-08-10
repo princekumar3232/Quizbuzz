@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Result{% endblock %}
+{% block content %}
+<div class="quiz-card feedback-card {{ 'correct' if feedback.is_correct else 'wrong' }}">
+    {% if feedback.is_correct %}
+        <h2>✅ Sahi Jawab!</h2>
+    {% else %}
+        <h2>❌ Galat Jawab</h2>
+        <p>Aapne chuna: <strong>{{ feedback.selected or "Kuch nahi (time khatam)" }}</strong></p>
+        <p>Sahi jawab tha: <strong>{{ feedback.correct_answer }}</strong></p>
+    {% endif %}
+    <p class="progress">Sawal {{ q_index }} / {{ total }} poore hue</p>
+    <form method="POST">
+        <input type="hidden" name="action" value="next">
+        <button type="submit" class="next-btn">Next Sawal →</button>
+    </form>
+</div>
+{% endblock %}
