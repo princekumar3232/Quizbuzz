@@ -45,7 +45,6 @@ def init_db():
             best_score INTEGER NOT NULL DEFAULT 0
         );
     """)
-    # Agar purana table pehle se bina email/mobile ke bana hua hai, to columns add kar do
     cur.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS email TEXT;")
     cur.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS mobile_number TEXT;")
     cur.execute("""
