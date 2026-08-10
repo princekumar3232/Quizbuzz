@@ -100,14 +100,16 @@ def register():
 def login():
     if request.method == "POST":
         username = request.form["username"].strip()
-        password = request.form["password"]
+        password = request.form["password"].strip()
 
         conn = get_db()
         cur = conn.cursor()
-        cur.execute("SELECT * FROM users WHERE username = %s", (username,))
+        cur.execute("SELECT * FROM users WHERE LOWER(username) = LOWER(%s)", (username,))
         user = cur.fetchone()
         cur.close()
         conn.close()
+
+        print(f"DEBUG: username={username!r}, user_found={user is not None}")
 
         if user is None or not check_password_hash(user["password_hash"], password):
             return render_template("login.html", error="Galat username ya password.")
