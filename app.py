@@ -12,7 +12,7 @@ app.secret_key = os.environ.get("SECRET_KEY", "dev-fallback-key-change-me")
 
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
-TIME_PER_QUESTION = 10
+TIME_PER_QUESTION = 3
 CHECKPOINT_EVERY = 10
 
 QUESTIONS_BY_CATEGORY = json.loads(
