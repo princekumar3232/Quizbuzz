@@ -1,18 +1,1 @@
-{
-  "physical": {
-    "Physical Education": {
-      "Anatomy": [
-        {
-          "q": "Original question yahan",
-          "options": [
-            "Option A",
-            "Option B",
-            "Option C",
-            "Option D"
-          ],
-          "answer": "Correct option"
-        }
-      ]
-    }
-  }
-}
+
