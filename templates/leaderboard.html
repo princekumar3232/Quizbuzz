@@ -1,15 +1,61 @@
 {% extends "base.html" %}
-{% block title %}Leaderboard{% endblock %}
+
+{% block title %}
+Leaderboard
+{% endblock %}
+
 {% block content %}
-<h2>🏆 Leaderboard</h2>
-<table class="leaderboard-table">
-    <tr><th>#</th><th>Username</th><th>Best Score</th></tr>
-    {% for user in top_users %}
-    <tr>
-        <td>{{ loop.index }}</td>
-        <td>{{ user.username }}</td>
-        <td>{{ user.best_score }}</td>
-    </tr>
-    {% endfor %}
-</table>
+
+<div class="card">
+
+    <h2>🏆 Leaderboard</h2>
+
+    <table class="leaderboard-table">
+
+        <thead>
+
+            <tr>
+                <th>Rank</th>
+                <th>Username</th>
+                <th>Best Score</th>
+            </tr>
+
+        </thead>
+
+        <tbody>
+
+            {% for user in top_users %}
+
+            <tr>
+
+                <td>
+                    {{ loop.index }}
+                </td>
+
+                <td>
+                    {{ user.username }}
+                </td>
+
+                <td>
+                    {{ user.best_score }}
+                </td>
+
+            </tr>
+
+            {% else %}
+
+            <tr>
+                <td colspan="3">
+                    Abhi koi score nahi hai.
+                </td>
+            </tr>
+
+            {% endfor %}
+
+        </tbody>
+
+    </table>
+
+</div>
+
 {% endblock %}
