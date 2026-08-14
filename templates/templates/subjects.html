@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}
+{{ exam }} - Subjects
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+
+    <a
+        href="{{ url_for(
+            'exams',
+            category=category
+        ) }}"
+        class="back-btn"
+    >
+        ← Exams
+    </a>
+
+    <h2>{{ exam }}</h2>
+
+    <p>
+        Subject select karein
+    </p>
+
+</div>
+
+
+<div class="subject-grid">
+
+    {% for subject_name, questions in subjects.items() %}
+
+    <a
+        href="{{ url_for(
+            'start_test',
+            category=category,
+            exam=exam,
+            subject=subject_name
+        ) }}"
+        class="subject-card"
+    >
+
+        <div class="subject-icon">
+            📚
+        </div>
+
+        <div>
+
+            <h3>
+                {{ subject_name }}
+            </h3>
+
+            <p>
+                {{ questions|length }} Questions
+            </p>
+
+        </div>
+
+        <span class="arrow">
+            →
+        </span>
+
+    </a>
+
+    {% endfor %}
+
+</div>
+
+{% endblock %}
