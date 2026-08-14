@@ -1,52 +1,47 @@
 {% extends "base.html" %}
 
-{% block title %}Home{% endblock %}
+{% block title %}
+Home
+{% endblock %}
 
 {% block content %}
 
-<div class="home-card">
-    <h2>🎯 QuizApp</h2>
+<div class="card">
+
+    <h2>
+        👋 Welcome, {{ username }}
+    </h2>
 
     <p>
-        Welcome, {{ username }}
+        Apni category select karo.
     </p>
 
-    <p>
-        Apna category select karein
-    </p>
 </div>
 
+<br>
 
 <div class="category-grid">
 
     {% for key, label in categories.items() %}
 
     <a
+        class="category-card"
         href="{{ url_for('exams', category=key) }}"
-        class="category-card {{ key }}"
     >
 
-        <span class="cat-icon">
-
+        <div style="font-size:35px;">
             {% if key == "teaching" %}
                 🎓
             {% elif key == "sports" %}
                 🏆
             {% elif key == "music" %}
                 🎵
-            {% elif key == "physical" %}
+            {% else %}
                 🏃
             {% endif %}
+        </div>
 
-        </span>
-
-        <span>
-            {{ label }}
-        </span>
-
-        <small>
-            Exams →
-        </small>
+        {{ label }}
 
     </a>
 
