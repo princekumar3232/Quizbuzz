@@ -2,39 +2,67 @@ import os
 import json
 from functools import wraps
 from pathlib import Path
-from flask import Flask, render_template, request, redirect, url_for, session, abort
+
+from flask import (
+    Flask, render_template, request, redirect,
+    url_for, session, abort
+)
 from werkzeug.security import generate_password_hash, check_password_hash
+
 import psycopg
 from psycopg.rows import dict_row
 
+
 app = Flask(__name__)
-app.secret_key = os.environ.get("SECRET_KEY", "dev-fallback-key-change-me")
+app.secret_key = os.environ.get(
+    "SECRET_KEY",
+    "dev-fallback-key-change-me"
+)
 
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
-TIME_PER_QUESTION = 3
+TIME_PER_QUESTION = 30
 CHECKPOINT_EVERY = 10
 
-QUESTIONS_BY_CATEGORY = json.loads(
-    (Path(__file__).parent / "static" / "questions.json").read_text(encoding="utf-8")
-)
+BASE_DIR = Path(__file__).parent
+QUESTIONS_FILE = BASE_DIR / "static" / "questions.json"
+
+
+def load_questions():
+    try:
+        return json.loads(
+            QUESTIONS_FILE.read_text(encoding="utf-8")
+        )
+    except Exception as e:
+        app.logger.error(f"questions.json error: {e}")
+        return {}
+
+
+QUESTIONS_DATA = load_questions()
+
 
 CATEGORY_LABELS = {
-    "teaching": "Teaching",
-    "sports": "Sports",
-    "music": "Music",
-    "physical": "Physical",
+    "teaching": "🎓 Teaching",
+    "sports": "🏆 Sports",
+    "music": "🎵 Music",
+    "physical": "🏃 Physical",
 }
 
 
 def get_db():
-    conn = psycopg.connect(DATABASE_URL, row_factory=dict_row)
-    return conn
+    if not DATABASE_URL:
+        raise RuntimeError("DATABASE_URL environment variable missing")
+
+    return psycopg.connect(
+        DATABASE_URL,
+        row_factory=dict_row
+    )
 
 
 def init_db():
     conn = get_db()
     cur = conn.cursor()
+
     cur.execute("""
         CREATE TABLE IF NOT EXISTS users (
             id SERIAL PRIMARY KEY,
@@ -43,6 +71,7 @@ def init_db():
             best_score INTEGER NOT NULL DEFAULT 0
         );
     """)
+
     cur.execute("""
         CREATE TABLE IF NOT EXISTS notes (
             id SERIAL PRIMARY KEY,
@@ -52,6 +81,7 @@ def init_db():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
     """)
+
     conn.commit()
     cur.close()
     conn.close()
@@ -63,34 +93,60 @@ def login_required(f):
         if "user_id" not in session:
             return redirect(url_for("login"))
         return f(*args, **kwargs)
+
     return wrapper
 
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
+
     if request.method == "POST":
+
         username = request.form["username"].strip()
         password = request.form["password"]
 
         if not username or not password:
-            return render_template("register.html", error="Sabhi field zaroori hain.")
+            return render_template(
+                "register.html",
+                error="Sabhi field zaroori hain."
+            )
 
         conn = get_db()
         cur = conn.cursor()
-        cur.execute("SELECT id FROM users WHERE username = %s", (username,))
+
+        cur.execute(
+            "SELECT id FROM users WHERE username = %s",
+            (username,)
+        )
+
         existing = cur.fetchone()
+
         if existing:
             cur.close()
             conn.close()
-            return render_template("register.html", error="Ye username pehle se hai.")
+
+            return render_template(
+                "register.html",
+                error="Ye username pehle se hai."
+            )
 
         cur.execute(
-            "INSERT INTO users (username, password_hash) VALUES (%s, %s)",
-            (username, generate_password_hash(password)),
+            """
+            INSERT INTO users
+            (username, password_hash)
+            VALUES (%s, %s)
+            """,
+            (
+                username,
+                generate_password_hash(password)
+            )
         )
+
         conn.commit()
+
         cur.close()
         conn.close()
+
         return redirect(url_for("login"))
 
     return render_template("register.html")
@@ -98,23 +154,44 @@ def register():
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
+
     if request.method == "POST":
+
         username = request.form["username"].strip()
         password = request.form["password"].strip()
 
         conn = get_db()
         cur = conn.cursor()
-        cur.execute("SELECT * FROM users WHERE LOWER(username) = LOWER(%s)", (username,))
+
+        cur.execute(
+            """
+            SELECT *
+            FROM users
+            WHERE LOWER(username) = LOWER(%s)
+            """,
+            (username,)
+        )
+
         user = cur.fetchone()
+
         cur.close()
         conn.close()
 
-        if user is None or not check_password_hash(user["password_hash"], password):
-            app.logger.warning(f"LOGIN FAIL: username={username!r} user_found={user is not None}")
-            return render_template("login.html", error="Galat username ya password.")
+        if (
+            user is None
+            or not check_password_hash(
+                user["password_hash"],
+                password
+            )
+        ):
+            return render_template(
+                "login.html",
+                error="Galat username ya password."
+            )
 
         session["user_id"] = user["id"]
         session["username"] = user["username"]
+
         return redirect(url_for("index"))
 
     return render_template("login.html")
@@ -122,91 +199,226 @@ def login():
 
 @app.route("/logout")
 def logout():
+
     session.clear()
+
     return redirect(url_for("login"))
 
+
+# ------------------------------------------------
+# HOME
+# ------------------------------------------------
 
 @app.route("/")
 @login_required
 def index():
-    return render_template("index.html", username=session["username"], categories=CATEGORY_LABELS)
+
+    return render_template(
+        "index.html",
+        username=session["username"],
+        categories=CATEGORY_LABELS
+    )
 
 
-@app.route("/quiz/<category>")
+# ------------------------------------------------
+# EXAM LIST
+# ------------------------------------------------
+
+@app.route("/category/<category>")
 @login_required
-def quiz(category):
-    if category not in QUESTIONS_BY_CATEGORY:
+def exams(category):
+
+    if category not in QUESTIONS_DATA:
         abort(404)
+
+    category_data = QUESTIONS_DATA[category]
+
+    return render_template(
+        "exams.html",
+        category=category,
+        category_label=CATEGORY_LABELS.get(
+            category,
+            category.title()
+        ),
+        exams=category_data
+    )
+
+
+# ------------------------------------------------
+# SUBJECT LIST
+# ------------------------------------------------
+
+@app.route("/category/<category>/exam/<exam>")
+@login_required
+def subjects(category, exam):
+
+    if category not in QUESTIONS_DATA:
+        abort(404)
+
+    category_data = QUESTIONS_DATA[category]
+
+    if exam not in category_data:
+        abort(404)
+
+    exam_data = category_data[exam]
+
+    return render_template(
+        "subjects.html",
+        category=category,
+        category_label=CATEGORY_LABELS.get(
+            category,
+            category.title()
+        ),
+        exam=exam,
+        subjects=exam_data
+    )
+
+
+# ------------------------------------------------
+# START TEST
+# ------------------------------------------------
+
+@app.route(
+    "/category/<category>/exam/<exam>/subject/<subject>"
+)
+@login_required
+def start_test(category, exam, subject):
+
+    if category not in QUESTIONS_DATA:
+        abort(404)
+
+    if exam not in QUESTIONS_DATA[category]:
+        abort(404)
+
+    exam_data = QUESTIONS_DATA[category][exam]
+
+    if subject not in exam_data:
+        abort(404)
+
+    questions = exam_data[subject]
+
+    if not questions:
+        return "Is subject mein abhi questions available nahi hain."
+
     session["category"] = category
-    session["quiz"] = QUESTIONS_BY_CATEGORY[category]
+    session["exam"] = exam
+    session["subject"] = subject
+
+    session["quiz"] = questions
     session["score"] = 0
     session["q_index"] = 0
+
     return redirect(url_for("question"))
 
+
+# ------------------------------------------------
+# QUESTION
+# ------------------------------------------------
 
 @app.route("/question", methods=["GET", "POST"])
 @login_required
 def question():
+
     quiz_list = session.get("quiz")
+
     if not quiz_list:
         return redirect(url_for("index"))
 
     q_index = session.get("q_index", 0)
 
-    if request.method == "POST":
-        action = request.form.get("action")
-
-        if action in ("continue", "next"):
-            pass
-        else:
-            selected = request.form.get("option")
-            correct_answer = quiz_list[q_index]["answer"]
-            is_correct = (selected == correct_answer)
-            if is_correct:
-                session["score"] = session.get("score", 0) + 1
-
-            session["last_feedback"] = {
-                "is_correct": is_correct,
-                "correct_answer": correct_answer,
-                "selected": selected,
-            }
-            q_index += 1
-            session["q_index"] = q_index
-
-            if q_index % CHECKPOINT_EVERY == 0 and q_index < len(quiz_list):
-                return render_template(
-                    "checkpoint.html",
-                    score=session.get("score", 0),
-                    q_index=q_index,
-                    total=len(quiz_list),
-                    feedback=session["last_feedback"],
-                )
-
-            return render_template(
-                "answer_feedback.html",
-                feedback=session["last_feedback"],
-                q_index=q_index,
-                total=len(quiz_list),
-            )
-
+    # TEST FINISHED
     if q_index >= len(quiz_list):
+
         final_score = session.get("score", 0)
+
         conn = get_db()
         cur = conn.cursor()
-        cur.execute("SELECT * FROM users WHERE id = %s", (session["user_id"],))
+
+        cur.execute(
+            "SELECT * FROM users WHERE id = %s",
+            (session["user_id"],)
+        )
+
         user = cur.fetchone()
-        if final_score > user["best_score"]:
+
+        if user and final_score > user["best_score"]:
+
             cur.execute(
-                "UPDATE users SET best_score = %s WHERE id = %s",
-                (final_score, session["user_id"]),
+                """
+                UPDATE users
+                SET best_score = %s
+                WHERE id = %s
+                """,
+                (
+                    final_score,
+                    session["user_id"]
+                )
             )
+
             conn.commit()
+
         cur.close()
         conn.close()
-        return render_template("result.html", score=final_score, total=len(quiz_list))
+
+        return render_template(
+            "result.html",
+            score=final_score,
+            total=len(quiz_list),
+            category=session.get("category"),
+            exam=session.get("exam"),
+            subject=session.get("subject")
+        )
+
+    # POST ANSWER
+    if request.method == "POST":
+
+        selected = request.form.get("option")
+
+        current_q = quiz_list[q_index]
+
+        correct_answer = current_q["answer"]
+
+        is_correct = selected == correct_answer
+
+        if is_correct:
+            session["score"] = (
+                session.get("score", 0) + 1
+            )
+
+        session["last_feedback"] = {
+            "is_correct": is_correct,
+            "correct_answer": correct_answer,
+            "selected": selected
+        }
+
+        q_index += 1
+
+        session["q_index"] = q_index
+
+        if (
+            q_index % CHECKPOINT_EVERY == 0
+            and q_index < len(quiz_list)
+        ):
+
+            return render_template(
+                "checkpoint.html",
+                score=session.get("score", 0),
+                q_index=q_index,
+                total=len(quiz_list),
+                feedback=session["last_feedback"]
+            )
+
+        return render_template(
+            "answer_feedback.html",
+            feedback=session["last_feedback"],
+            q_index=q_index,
+            total=len(quiz_list)
+        )
+
+    # CURRENT QUESTION
 
     current_q = quiz_list[q_index]
-    category_label = CATEGORY_LABELS.get(session.get("category"), "")
+
     return render_template(
         "question.html",
         question=current_q["q"],
@@ -214,55 +426,129 @@ def question():
         q_number=q_index + 1,
         total=len(quiz_list),
         time_limit=TIME_PER_QUESTION,
-        category_label=category_label,
+        category_label=CATEGORY_LABELS.get(
+            session.get("category"),
+            ""
+        ),
+        exam=session.get("exam"),
+        subject=session.get("subject")
     )
 
+
+# ------------------------------------------------
+# NOTES
+# ------------------------------------------------
 
 @app.route("/notes", methods=["GET", "POST"])
 @login_required
 def notes():
+
     error = None
 
     if request.method == "POST":
-        text = request.form.get("text", "").strip()
+
+        text = request.form.get(
+            "text",
+            ""
+        ).strip()
 
         if not text:
+
             error = "Note likhna zaroori hai."
+
         else:
+
             conn = get_db()
             cur = conn.cursor()
+
             cur.execute(
-                "INSERT INTO notes (user_id, username, text) VALUES (%s, %s, %s)",
-                (session["user_id"], session["username"], text),
+                """
+                INSERT INTO notes
+                (user_id, username, text)
+                VALUES (%s, %s, %s)
+                """,
+                (
+                    session["user_id"],
+                    session["username"],
+                    text
+                )
             )
+
             conn.commit()
+
             cur.close()
             conn.close()
-            return redirect(url_for("notes"))
+
+            return redirect(
+                url_for("notes")
+            )
 
     conn = get_db()
     cur = conn.cursor()
-    cur.execute("SELECT * FROM notes ORDER BY created_at DESC LIMIT 50")
+
+    cur.execute(
+        """
+        SELECT *
+        FROM notes
+        ORDER BY created_at DESC
+        LIMIT 50
+        """
+    )
+
     all_notes = cur.fetchall()
+
     cur.close()
     conn.close()
 
-    return render_template("notes.html", notes=all_notes, error=error)
+    return render_template(
+        "notes.html",
+        notes=all_notes,
+        error=error
+    )
 
+
+# ------------------------------------------------
+# LEADERBOARD
+# ------------------------------------------------
 
 @app.route("/leaderboard")
 @login_required
 def leaderboard():
+
     conn = get_db()
     cur = conn.cursor()
-    cur.execute("SELECT username, best_score FROM users ORDER BY best_score DESC LIMIT 20")
+
+    cur.execute(
+        """
+        SELECT username, best_score
+        FROM users
+        ORDER BY best_score DESC
+        LIMIT 20
+        """
+    )
+
     top_users = cur.fetchall()
+
     cur.close()
     conn.close()
-    return render_template("leaderboard.html", top_users=top_users)
 
+    return render_template(
+        "leaderboard.html",
+        top_users=top_users
+    )
+
+
+# ------------------------------------------------
+# DATABASE
+# ------------------------------------------------
 
 init_db()
 
+
 if __name__ == "__main__":
-    app.run(debug=False, host="0.0.0.0", port=5000)
+
+    app.run(
+        debug=False,
+        host="0.0.0.0",
+        port=5000
+    )
