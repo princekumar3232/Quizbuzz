@@ -1,26 +1,51 @@
 {% extends "base.html" %}
-{% block title %}Register{% endblock %}
+
+{% block title %}
+Register
+{% endblock %}
+
 {% block content %}
+
 <div class="auth-card">
-    <h2>Register</h2>
-    {% if error %}<p class="error">{{ error }}</p>{% endif %}
+
+    <h2>📝 Register</h2>
+
+    {% if error %}
+        <p class="error">{{ error }}</p>
+    {% endif %}
+
     <form method="POST">
-        <input type="text" name="username" placeholder="Username" required>
-        <input type="email" name="email" placeholder="Email" required>
-        <input type="tel" name="mobile_number" placeholder="Mobile Number" pattern="[0-9]{10}" maxlength="10" required>
-        <div class="password-wrapper">
-            <input type="password" name="password" id="password" placeholder="Password" required>
-            <span class="toggle-eye" onclick="togglePassword('password', this)">👁️</span>
-        </div>
-        <button type="submit">Register</button>
+
+        <input
+            type="text"
+            name="username"
+            placeholder="Username"
+            required
+        >
+
+        <input
+            type="password"
+            name="password"
+            placeholder="Password"
+            required
+        >
+
+        <button
+            class="full-btn"
+            type="submit"
+        >
+            Create Account
+        </button>
+
     </form>
-    <p>Pehle se account hai? <a href="{{ url_for('login') }}">Login karein</a></p>
+
+    <p>
+        Already account hai?
+        <a href="{{ url_for('login') }}">
+            Login
+        </a>
+    </p>
+
 </div>
-<script>
-function togglePassword(id, el) {
-    const input = document.getElementById(id);
-    if (input.type === "password") { input.type = "text"; el.textContent = "🙈"; }
-    else { input.type = "password"; el.textContent = "👁️"; }
-}
-</script>
+
 {% endblock %}
