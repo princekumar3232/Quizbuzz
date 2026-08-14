@@ -1,52 +1,54 @@
 {% extends "base.html" %}
 
 {% block title %}
-{{ category_label }} - Exams
+{{ category_label }}
 {% endblock %}
 
 {% block content %}
 
-<div class="page-header">
+<div class="card">
+
     <h2>{{ category_label }}</h2>
-    <p>Exam / Question Bank select karein</p>
-</div>
 
-<div class="exam-grid">
+    <p>
+        Exam select karo.
+    </p>
 
-    {% for exam_name, subjects in exams.items() %}
+    {% if exams %}
 
-    <a
-        class="exam-card"
-        href="{{ url_for(
-            'subjects',
-            category=category,
-            exam=exam_name
-        ) }}"
-    >
+    <div class="exam-grid">
 
-        <div class="exam-icon">
-            📝
-        </div>
+        {% for exam_name, subjects in exams.items() %}
 
-        <div class="exam-title">
-            {{ exam_name }}
-        </div>
+        <a
+            class="exam-card"
+            href="{{ url_for(
+                'subjects',
+                category=category,
+                exam=exam_name
+            ) }}"
+        >
 
-        <div class="exam-count">
+            📚 {{ exam_name }}
+
+            <br><br>
+
             {{ subjects|length }} Subjects
-        </div>
 
-    </a>
+        </a>
 
-    {% endfor %}
+        {% endfor %}
+
+    </div>
+
+    {% else %}
+
+        <p>
+            Abhi exams available nahi hain.
+        </p>
+
+    {% endif %}
 
 </div>
-
-<a
-    href="{{ url_for('index') }}"
-    class="back-btn"
->
-    ← Home
-</a>
 
 {% endblock %}
