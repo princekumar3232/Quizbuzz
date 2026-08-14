@@ -1,27 +1,67 @@
 {% extends "base.html" %}
-{% block title %}Notes{% endblock %}
+
+{% block title %}
+Notes
+{% endblock %}
+
 {% block content %}
-<h2>📝 Notes</h2>
 
-<div class="auth-card" style="margin-bottom:24px;">
-    {% if error %}<p class="error">{{ error }}</p>{% endif %}
-    <form method="POST">
-        <textarea name="text" rows="3" placeholder="Apna note likhein..." style="width:100%; padding:10px; border-radius:6px; border:1px solid #ddd; font-family:inherit;"></textarea>
-        <button type="submit" class="next-btn">Post karein</button>
+<div class="card">
+
+    <h2>📝 My Notes</h2>
+
+    {% if error %}
+        <p class="error">
+            {{ error }}
+        </p>
+    {% endif %}
+
+    <form
+        method="POST"
+        class="note-form"
+    >
+
+        <textarea
+            name="text"
+            rows="5"
+            placeholder="Apni note yahan likho..."
+            required
+        ></textarea>
+
+        <button type="submit">
+            Save Note
+        </button>
+
     </form>
+
 </div>
 
-<div class="notes-feed">
-    {% for note in notes %}
-    <div class="note-item">
-        <div class="note-head">
-            <strong>{{ note.username }}</strong>
-            <span class="note-time">{{ note.created_at }}</span>
-        </div>
-        <p>{{ note.text }}</p>
-    </div>
-    {% else %}
-    <p>Abhi tak koi note nahi hai. Sabse pehle aap likhein!</p>
-    {% endfor %}
+<br>
+
+{% for note in notes %}
+
+<div class="note-item">
+
+    <strong>
+        {{ note.username }}
+    </strong>
+
+    <small>
+        {{ note.created_at }}
+    </small>
+
+    <p>
+        {{ note.text }}
+    </p>
+
 </div>
+
+{% else %}
+
+<div class="card">
+    <p>Abhi koi notes nahi hain.</p>
+</div>
+
+{% endfor %}
+
 {% endblock %}
