@@ -1,21 +1,60 @@
 {% extends "base.html" %}
-{% block title %}Checkpoint{% endblock %}
+
+{% block title %}
+Checkpoint
+{% endblock %}
+
 {% block content %}
-<div class="quiz-card feedback-card {{ 'correct' if feedback.is_correct else 'wrong' }}">
-    {% if feedback.is_correct %}
-        <h2>✅ Sahi Jawab!</h2>
-    {% else %}
-        <h2>❌ Galat Jawab</h2>
-        <p>Sahi jawab tha: <strong>{{ feedback.correct_answer }}</strong></p>
-    {% endif %}
-</div>
+
 <div class="checkpoint-card">
-    <h2>🚩 Checkpoint</h2>
-    <p>{{ q_index }} / {{ total }} sawal poore hue</p>
-    <p class="score-text">Abhi tak score: {{ score }} / {{ q_index }}</p>
+
+    <h2>
+        🏁 Checkpoint
+    </h2>
+
+    <p>
+        {{ q_index }} questions complete
+    </p>
+
+    <p class="score-text">
+        Score: {{ score }} / {{ q_index }}
+    </p>
+
+
+    {% if feedback.is_correct %}
+
+        <p>
+            Last answer: ✅ Correct
+        </p>
+
+    {% else %}
+
+        <p>
+            Last answer: ❌ Wrong
+        </p>
+
+        <p>
+            Correct:
+            <strong>
+                {{ feedback.correct_answer }}
+            </strong>
+        </p>
+
+    {% endif %}
+
+
     <form method="POST">
-        <input type="hidden" name="action" value="continue">
-        <button type="submit" class="next-btn">Continue →</button>
+
+        <button
+            name="action"
+            value="continue"
+            class="next-btn"
+        >
+            Continue Test →
+        </button>
+
     </form>
+
 </div>
+
 {% endblock %}
