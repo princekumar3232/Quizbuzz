@@ -1,31 +1,108 @@
 {% extends "base.html" %}
-{% block title %}Question {{ q_number }}{% endblock %}
+
+{% block title %}
+Question {{ q_number }}
+{% endblock %}
+
 {% block content %}
+
 <div class="quiz-card">
-    <p class="progress">{{ category_label }} · Sawal {{ q_number }} / {{ total }}</p>
-    <p class="timer">⏱️ <span id="timeLeft">{{ time_limit }}</span> sec</p>
-    <h3>{{ question }}</h3>
-    <form method="POST" id="quizForm">
+
+    <div class="quiz-top">
+
+        <p class="progress">
+            {{ category_label }}
+            ·
+            {{ exam }}
+            ·
+            {{ subject }}
+        </p>
+
+        <p class="progress">
+            Sawal {{ q_number }} / {{ total }}
+        </p>
+
+    </div>
+
+
+    <p class="timer">
+        ⏱️
+        <span id="timeLeft">
+            {{ time_limit }}
+        </span>
+        sec
+    </p>
+
+
+    <h3>
+        {{ question }}
+    </h3>
+
+
+    <form
+        method="POST"
+        id="quizForm"
+    >
+
         {% for option in options %}
+
         <label class="option-label">
-            <input type="radio" name="option" value="{{ option }}">
+
+            <input
+                type="radio"
+                name="option"
+                value="{{ option }}"
+                required
+            >
+
             {{ option }}
+
         </label>
+
         {% endfor %}
-        <button type="submit" class="next-btn">Submit</button>
+
+
+        <button
+            type="submit"
+            class="next-btn"
+        >
+            Submit Answer
+        </button>
+
     </form>
+
 </div>
+
+
 <script>
-    let timeLeft = {{ time_limit }};
-    const timerEl = document.getElementById("timeLeft");
-    const formEl = document.getElementById("quizForm");
-    const countdown = setInterval(function () {
+
+let timeLeft = {{ time_limit }};
+
+const timerEl =
+    document.getElementById("timeLeft");
+
+const formEl =
+    document.getElementById("quizForm");
+
+
+const countdown =
+    setInterval(function () {
+
         timeLeft -= 1;
-        timerEl.textContent = timeLeft;
+
+        timerEl.textContent =
+            timeLeft;
+
         if (timeLeft <= 0) {
+
             clearInterval(countdown);
+
             formEl.submit();
+
         }
+
     }, 1000);
+
 </script>
+
 {% endblock %}
