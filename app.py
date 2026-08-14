@@ -8,13 +8,11 @@ from psycopg.rows import dict_row
 from flask import Flask, render_template, request, redirect, url_for, session, abort
 from werkzeug.security import generate_password_hash, check_password_hash
 
-
 app = Flask(__name__)
 
-# Render par SECRET_KEY environment variable se aayegi
 app.secret_key = os.environ.get(
     "SECRET_KEY",
-    "dev-secret-key-change-this"
+    "change-this-secret-key"
 )
 
 DATABASE_URL = os.environ.get("DATABASE_URL")
@@ -24,11 +22,6 @@ QUESTIONS_FILE = BASE_DIR / "static" / "questions.json"
 
 TIME_PER_QUESTION = 30
 
-
-# =========================================================
-# CATEGORY NAMES
-# =========================================================
-
 CATEGORY_LABELS = {
     "teaching": "🎓 Teaching",
     "sports": "🏆 Sports",
@@ -37,38 +30,24 @@ CATEGORY_LABELS = {
 }
 
 
-# =========================================================
-# LOAD QUESTIONS
-# =========================================================
-
 def load_questions():
-
     if not QUESTIONS_FILE.exists():
-        print("ERROR: static/questions.json not found")
         return {}
 
     try:
         with open(QUESTIONS_FILE, "r", encoding="utf-8") as file:
             return json.load(file)
-
     except Exception as error:
-        print("ERROR loading questions.json:", error)
+        print("Question file error:", error)
         return {}
 
 
 QUESTIONS_DATA = load_questions()
 
 
-# =========================================================
-# DATABASE
-# =========================================================
-
 def get_db():
-
     if not DATABASE_URL:
-        raise RuntimeError(
-            "DATABASE_URL environment variable is missing."
-        )
+        raise RuntimeError("DATABASE_URL is not configured.")
 
     return psycopg.connect(
         DATABASE_URL,
@@ -77,14 +56,11 @@ def get_db():
 
 
 def init_db():
-
     conn = get_db()
 
     try:
-
         cur = conn.cursor()
 
-        # USERS TABLE
         cur.execute("""
             CREATE TABLE IF NOT EXISTS users (
                 id SERIAL PRIMARY KEY,
@@ -94,13 +70,10 @@ def init_db():
             )
         """)
 
-        # NOTES TABLE
         cur.execute("""
             CREATE TABLE IF NOT EXISTS notes (
                 id SERIAL PRIMARY KEY,
-                user_id INTEGER NOT NULL
-                    REFERENCES users(id)
-                    ON DELETE CASCADE,
+                user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
                 username TEXT NOT NULL,
                 text TEXT NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -114,61 +87,34 @@ def init_db():
 
 
 @app.before_request
-def prepare_database():
+def database_setup():
+    if DATABASE_URL and not app.config.get("DATABASE_READY"):
+        try:
+            init_db()
+            app.config["DATABASE_READY"] = True
+        except Exception as error:
+            print("Database initialization error:", error)
 
-    if not app.config.get("DATABASE_READY"):
-
-        if DATABASE_URL:
-
-            try:
-                init_db()
-                app.config["DATABASE_READY"] = True
-
-            except Exception as error:
-                print("DATABASE ERROR:", error)
-
-        else:
-            print("DATABASE_URL not configured.")
-
-
-# =========================================================
-# LOGIN REQUIRED
-# =========================================================
 
 def login_required(function):
-
     @wraps(function)
     def wrapper(*args, **kwargs):
-
         if "user_id" not in session:
             return redirect(url_for("login"))
-
         return function(*args, **kwargs)
 
     return wrapper
 
-
-# =========================================================
-# REGISTER
-# =========================================================
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
 
     if request.method == "POST":
 
-        username = request.form.get(
-            "username",
-            ""
-        ).strip()
-
-        password = request.form.get(
-            "password",
-            ""
-        )
+        username = request.form.get("username", "").strip()
+        password = request.form.get("password", "")
 
         if not username or not password:
-
             return render_template(
                 "register.html",
                 error="Sabhi fields bharna zaroori hai."
@@ -177,38 +123,27 @@ def register():
         conn = get_db()
 
         try:
-
             cur = conn.cursor()
 
             cur.execute(
-                """
-                SELECT id
-                FROM users
-                WHERE LOWER(username) = LOWER(%s)
-                """,
+                "SELECT id FROM users WHERE LOWER(username)=LOWER(%s)",
                 (username,)
             )
 
-            existing_user = cur.fetchone()
-
-            if existing_user:
-
+            if cur.fetchone():
                 return render_template(
                     "register.html",
                     error="Ye username pehle se registered hai."
                 )
 
-            password_hash = generate_password_hash(password)
-
             cur.execute(
                 """
-                INSERT INTO users
-                (username, password_hash)
-                VALUES (%s, %s)
+                INSERT INTO users(username, password_hash)
+                VALUES(%s, %s)
                 """,
                 (
                     username,
-                    password_hash
+                    generate_password_hash(password)
                 )
             )
 
@@ -222,36 +157,24 @@ def register():
     return render_template("register.html")
 
 
-# =========================================================
-# LOGIN
-# =========================================================
-
 @app.route("/login", methods=["GET", "POST"])
 def login():
 
     if request.method == "POST":
 
-        username = request.form.get(
-            "username",
-            ""
-        ).strip()
-
-        password = request.form.get(
-            "password",
-            ""
-        )
+        username = request.form.get("username", "").strip()
+        password = request.form.get("password", "")
 
         conn = get_db()
 
         try:
-
             cur = conn.cursor()
 
             cur.execute(
                 """
                 SELECT *
                 FROM users
-                WHERE LOWER(username) = LOWER(%s)
+                WHERE LOWER(username)=LOWER(%s)
                 """,
                 (username,)
             )
@@ -261,25 +184,16 @@ def login():
         finally:
             conn.close()
 
-        if user is None:
-
-            return render_template(
-                "login.html",
-                error="Galat username ya password."
-            )
-
-        if not check_password_hash(
+        if not user or not check_password_hash(
             user["password_hash"],
             password
         ):
-
             return render_template(
                 "login.html",
                 error="Galat username ya password."
             )
 
         session.clear()
-
         session["user_id"] = user["id"]
         session["username"] = user["username"]
 
@@ -288,36 +202,21 @@ def login():
     return render_template("login.html")
 
 
-# =========================================================
-# LOGOUT
-# =========================================================
-
 @app.route("/logout")
 def logout():
-
     session.clear()
-
     return redirect(url_for("login"))
 
-
-# =========================================================
-# HOME
-# =========================================================
 
 @app.route("/")
 @login_required
 def index():
-
     return render_template(
         "index.html",
         username=session.get("username"),
         categories=CATEGORY_LABELS
     )
 
-
-# =========================================================
-# CATEGORY
-# =========================================================
 
 @app.route("/category/<category>")
 @login_required
@@ -326,20 +225,15 @@ def exams(category):
     if category not in QUESTIONS_DATA:
         abort(404)
 
+    exams_data = QUESTIONS_DATA[category]
+
     return render_template(
         "exams.html",
         category=category,
-        category_label=CATEGORY_LABELS.get(
-            category,
-            category.title()
-        ),
-        exams=QUESTIONS_DATA[category]
+        category_label=CATEGORY_LABELS.get(category, category.title()),
+        exams=exams_data
     )
 
-
-# =========================================================
-# EXAM
-# =========================================================
 
 @app.route("/category/<category>/exam/<path:exam>")
 @login_required
@@ -351,51 +245,31 @@ def subjects(category, exam):
     if exam not in QUESTIONS_DATA[category]:
         abort(404)
 
+    subjects_data = QUESTIONS_DATA[category][exam]
+
     return render_template(
         "subjects.html",
         category=category,
-        category_label=CATEGORY_LABELS.get(
-            category,
-            category.title()
-        ),
+        category_label=CATEGORY_LABELS.get(category, category.title()),
         exam=exam,
-        subjects=QUESTIONS_DATA[category][exam]
+        subjects=subjects_data
     )
 
 
-# =========================================================
-# START TEST
-# =========================================================
-
-@app.route(
-    "/category/<category>/exam/<path:exam>/subject/<path:subject>"
-)
+@app.route("/category/<category>/exam/<path:exam>/subject/<path:subject>")
 @login_required
 def start_test(category, exam, subject):
 
     try:
-
-        questions = QUESTIONS_DATA[
-            category
-        ][
-            exam
-        ][
-            subject
-        ]
-
+        questions = QUESTIONS_DATA[category][exam][subject]
     except KeyError:
-
         abort(404)
 
     if not questions:
-
         return render_template(
             "subjects.html",
             category=category,
-            category_label=CATEGORY_LABELS.get(
-                category,
-                category.title()
-            ),
+            category_label=CATEGORY_LABELS.get(category, category.title()),
             exam=exam,
             subjects=QUESTIONS_DATA[category][exam],
             error="Is subject mein abhi questions available nahi hain."
@@ -404,51 +278,27 @@ def start_test(category, exam, subject):
     session["category"] = category
     session["exam"] = exam
     session["subject"] = subject
-
     session["quiz"] = questions
     session["score"] = 0
     session["q_index"] = 0
 
-    return redirect(
-        url_for("question")
-    )
+    return redirect(url_for("question"))
 
 
-# =========================================================
-# QUESTION
-# =========================================================
-
-@app.route(
-    "/question",
-    methods=["GET", "POST"]
-)
+@app.route("/question", methods=["GET", "POST"])
 @login_required
 def question():
 
     quiz = session.get("quiz")
 
     if not quiz:
+        return redirect(url_for("index"))
 
-        return redirect(
-            url_for("index")
-        )
+    q_index = session.get("q_index", 0)
 
-    q_index = session.get(
-        "q_index",
-        0
-    )
-
-    # QUIZ FINISHED
     if q_index >= len(quiz):
-
-        final_score = session.get(
-            "score",
-            0
-        )
-
-        save_best_score(
-            final_score
-        )
+        final_score = session.get("score", 0)
+        save_best_score(final_score)
 
         return render_template(
             "result.html",
@@ -458,34 +308,19 @@ def question():
 
     current_question = quiz[q_index]
 
-    # ANSWER SUBMITTED
     if request.method == "POST":
 
-        selected = request.form.get(
-            "option"
-        )
+        selected = request.form.get("option")
+        correct_answer = current_question.get("answer")
 
-        correct_answer = current_question.get(
-            "answer"
-        )
-
-        is_correct = (
-            selected is not None
-            and selected == correct_answer
-        )
+        is_correct = selected == correct_answer
 
         if is_correct:
-
-            session["score"] = (
-                session.get("score", 0) + 1
-            )
+            session["score"] = session.get("score", 0) + 1
 
         session["last_feedback"] = {
-
             "is_correct": is_correct,
-
             "selected": selected,
-
             "correct_answer": correct_answer
         }
 
@@ -498,46 +333,21 @@ def question():
             total=len(quiz)
         )
 
-    # SHOW QUESTION
     return render_template(
         "question.html",
-
-        question=current_question.get(
-            "q",
-            ""
-        ),
-
-        options=current_question.get(
-            "options",
-            []
-        ),
-
+        question=current_question.get("q", ""),
+        options=current_question.get("options", []),
         q_number=q_index + 1,
-
         total=len(quiz),
-
         time_limit=TIME_PER_QUESTION,
-
         category_label=CATEGORY_LABELS.get(
             session.get("category"),
             ""
         ),
-
-        exam=session.get(
-            "exam",
-            ""
-        ),
-
-        subject=session.get(
-            "subject",
-            ""
-        )
+        exam=session.get("exam", ""),
+        subject=session.get("subject", "")
     )
 
-
-# =========================================================
-# SAVE BEST SCORE
-# =========================================================
 
 def save_best_score(score):
 
@@ -547,15 +357,10 @@ def save_best_score(score):
     conn = get_db()
 
     try:
-
         cur = conn.cursor()
 
         cur.execute(
-            """
-            SELECT best_score
-            FROM users
-            WHERE id = %s
-            """,
+            "SELECT best_score FROM users WHERE id=%s",
             (session["user_id"],)
         )
 
@@ -566,8 +371,8 @@ def save_best_score(score):
             cur.execute(
                 """
                 UPDATE users
-                SET best_score = %s
-                WHERE id = %s
+                SET best_score=%s
+                WHERE id=%s
                 """,
                 (
                     score,
@@ -581,14 +386,7 @@ def save_best_score(score):
         conn.close()
 
 
-# =========================================================
-# NOTES
-# =========================================================
-
-@app.route(
-    "/notes",
-    methods=["GET", "POST"]
-)
+@app.route("/notes", methods=["GET", "POST"])
 @login_required
 def notes():
 
@@ -596,13 +394,9 @@ def notes():
 
     if request.method == "POST":
 
-        text = request.form.get(
-            "text",
-            ""
-        ).strip()
+        text = request.form.get("text", "").strip()
 
         if not text:
-
             error = "Note likhna zaroori hai."
 
         else:
@@ -610,14 +404,12 @@ def notes():
             conn = get_db()
 
             try:
-
                 cur = conn.cursor()
 
                 cur.execute(
                     """
-                    INSERT INTO notes
-                    (user_id, username, text)
-                    VALUES (%s, %s, %s)
+                    INSERT INTO notes(user_id, username, text)
+                    VALUES(%s, %s, %s)
                     """,
                     (
                         session["user_id"],
@@ -631,14 +423,11 @@ def notes():
             finally:
                 conn.close()
 
-            return redirect(
-                url_for("notes")
-            )
+            return redirect(url_for("notes"))
 
     conn = get_db()
 
     try:
-
         cur = conn.cursor()
 
         cur.execute(
@@ -662,10 +451,6 @@ def notes():
     )
 
 
-# =========================================================
-# LEADERBOARD
-# =========================================================
-
 @app.route("/leaderboard")
 @login_required
 def leaderboard():
@@ -673,7 +458,6 @@ def leaderboard():
     conn = get_db()
 
     try:
-
         cur = conn.cursor()
 
         cur.execute(
@@ -696,31 +480,14 @@ def leaderboard():
     )
 
 
-# =========================================================
-# HEALTH CHECK
-# =========================================================
-
 @app.route("/health")
 def health():
+    return {"status": "ok"}
 
-    return {
-        "status": "ok"
-    }
-
-
-# =========================================================
-# RUN
-# =========================================================
 
 if __name__ == "__main__":
-
     app.run(
         host="0.0.0.0",
-        port=int(
-            os.environ.get(
-                "PORT",
-                5000
-            )
-        ),
+        port=int(os.environ.get("PORT", 5000)),
         debug=False
     )
