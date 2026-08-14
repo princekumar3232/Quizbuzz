@@ -20,7 +20,9 @@ Question {{ q_number }}
             · {{ subject }}
         {% endif %}
 
-        · Sawal {{ q_number }} / {{ total }}
+        <br>
+
+        Question {{ q_number }} / {{ total }}
 
     </p>
 
@@ -29,14 +31,12 @@ Question {{ q_number }}
         <span id="timeLeft">
             {{ time_limit }}
         </span>
-        sec
+        seconds
     </p>
 
     <h3>
         {{ question }}
     </h3>
-
-    {% if options %}
 
     <form
         method="POST"
@@ -51,6 +51,7 @@ Question {{ q_number }}
                 type="radio"
                 name="option"
                 value="{{ option }}"
+                required
             >
 
             {{ option }}
@@ -61,28 +62,12 @@ Question {{ q_number }}
 
         <button
             type="submit"
-            class="next-btn"
+            class="full-btn"
         >
             Submit Answer
         </button>
 
     </form>
-
-    {% else %}
-
-    <div class="answer-box">
-
-        <strong>
-            Answer:
-        </strong>
-
-        <p>
-            {{ session.get("quiz")[session.get("q_index")].get("answer") }}
-        </p>
-
-    </div>
-
-    {% endif %}
 
 </div>
 
@@ -90,34 +75,26 @@ Question {{ q_number }}
 
 let timeLeft = {{ time_limit }};
 
-const timerEl =
+const timerElement =
     document.getElementById("timeLeft");
 
-const formEl =
+const formElement =
     document.getElementById("quizForm");
 
-const countdown =
-    setInterval(function () {
+const timer = setInterval(function () {
 
-        timeLeft -= 1;
+    timeLeft--;
 
-        if (timerEl) {
-            timerEl.textContent =
-                timeLeft;
-        }
+    timerElement.textContent = timeLeft;
 
-        if (timeLeft <= 0) {
+    if (timeLeft <= 0) {
 
-            clearInterval(
-                countdown
-            );
+        clearInterval(timer);
 
-            if (formEl) {
-                formEl.submit();
-            }
-        }
+        formElement.submit();
+    }
 
-    }, 1000);
+}, 1000);
 
 </script>
 
