@@ -6,54 +6,63 @@ Answer
 
 {% block content %}
 
-<div
-    class="feedback-card
-    {% if feedback.is_correct %}
-        correct
-    {% else %}
-        wrong
-    {% endif %}"
->
+<div class="result-card">
 
     {% if feedback.is_correct %}
 
-        <h2>✅ Correct!</h2>
+        <div class="feedback-card correct">
 
-        <p>
-            Bahut badhiya!
-        </p>
+            <h2>✅ Correct!</h2>
+
+            <p>
+                Bahut badhiya.
+            </p>
+
+        </div>
 
     {% else %}
 
-        <h2>❌ Wrong!</h2>
+        <div class="feedback-card wrong">
 
-        <p>
-            Sahi answer:
-        </p>
+            <h2>❌ Wrong</h2>
 
-        <strong>
-            {{ feedback.correct_answer }}
-        </strong>
+            <p>
+                Tumhara answer:
+                <strong>
+                    {{ feedback.selected or "No Answer" }}
+                </strong>
+            </p>
+
+            <p>
+                Correct answer:
+                <strong>
+                    {{ feedback.correct_answer }}
+                </strong>
+            </p>
+
+        </div>
 
     {% endif %}
 
+    {% if q_index < total %}
 
-    <p>
-        Question {{ q_index }} / {{ total }}
-    </p>
-
-
-    <form method="POST">
-
-        <button
-            name="action"
-            value="continue"
-            class="next-btn"
+        <a
+            class="btn"
+            href="{{ url_for('question') }}"
         >
             Next Question →
-        </button>
+        </a>
 
-    </form>
+    {% else %}
+
+        <a
+            class="btn"
+            href="{{ url_for('question') }}"
+        >
+            View Result
+        </a>
+
+    {% endif %}
 
 </div>
 
