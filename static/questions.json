@@ -11,48 +11,277 @@
             "Chennai"
           ],
           "answer": "Delhi"
+        },
+        {
+          "q": "Bharat ke pehle Pradhan Mantri kaun the?",
+          "options": [
+            "Mahatma Gandhi",
+            "Jawaharlal Nehru",
+            "Sardar Patel",
+            "Dr. Rajendra Prasad"
+          ],
+          "answer": "Jawaharlal Nehru"
         }
       ],
-      "Pedagogy": []
+
+      "Pedagogy": [
+        {
+          "q": "Teaching ka mukhya uddeshya kya hai?",
+          "options": [
+            "Sirf exam pass karana",
+            "Learning ko facilitate karna",
+            "Sirf homework dena",
+            "Sirf attendance lena"
+          ],
+          "answer": "Learning ko facilitate karna"
+        }
+      ]
     }
   },
 
   "sports": {
     "Sports Question Bank": {
-      "Cricket": [],
-      "Football": [],
-      "Hockey": [],
-      "Athletics": []
+      "Cricket": [
+        {
+          "q": "Cricket mein ek over mein kitni legal balls hoti hain?",
+          "options": [
+            "5",
+            "6",
+            "7",
+            "8"
+          ],
+          "answer": "6"
+        }
+      ],
+
+      "Football": [
+        {
+          "q": "Football mein ek team ke kitne players field par hote hain?",
+          "options": [
+            "9",
+            "10",
+            "11",
+            "12"
+          ],
+          "answer": "11"
+        }
+      ],
+
+      "Hockey": [
+        {
+          "q": "Hockey mein ball ko kis equipment se hit kiya jata hai?",
+          "options": [
+            "Bat",
+            "Stick",
+            "Racket",
+            "Club"
+          ],
+          "answer": "Stick"
+        }
+      ],
+
+      "Athletics": [
+        {
+          "q": "100 metre race kis category mein aati hai?",
+          "options": [
+            "Track event",
+            "Field event",
+            "Water event",
+            "Combat event"
+          ],
+          "answer": "Track event"
+        }
+      ]
     }
   },
 
   "music": {
     "Music Question Bank": {
-      "Music Fundamentals": [],
-      "Notes & Scales": [],
-      "Intervals": [],
-      "Major Scales": [],
-      "Minor Scales": [],
-      "Chords": [],
-      "Harmony": [],
-      "Rhythm": [],
-      "Indian Music": [],
-      "Western Classical Music": []
+      "Music Fundamentals": [
+        {
+          "q": "Music mein rhythm ka sambandh kis se hai?",
+          "options": [
+            "Beat aur timing",
+            "Colour",
+            "Temperature",
+            "Weight"
+          ],
+          "answer": "Beat aur timing"
+        }
+      ],
+
+      "Notes & Scales": [
+        {
+          "q": "Western music mein basic musical notes kitne hote hain?",
+          "options": [
+            "5",
+            "6",
+            "7",
+            "8"
+          ],
+          "answer": "7"
+        }
+      ],
+
+      "Indian Music": [
+        {
+          "q": "Hindustani aur Carnatic kis se sambandhit hain?",
+          "options": [
+            "Indian classical music",
+            "Football",
+            "Painting",
+            "Geography"
+          ],
+          "answer": "Indian classical music"
+        }
+      ],
+
+      "Western Classical Music": [
+        {
+          "q": "Symphony kis field se sambandhit hai?",
+          "options": [
+            "Music",
+            "Sports",
+            "Science",
+            "Geography"
+          ],
+          "answer": "Music"
+        }
+      ]
     }
   },
 
   "physical": {
     "Physical Education Question Bank": {
-      "Anatomy": [],
-      "Physiology": [],
-      "Exercise Physiology": [],
-      "Health & Fitness": [],
-      "Physical Fitness Tests": [],
-      "Training Methods": [],
-      "Training Principles": [],
-      "Sports Psychology": [],
-      "Nutrition": [],
-      "Yoga": []
+      "Anatomy": [
+        {
+          "q": "Adult human body mein aam taur par kitni bones hoti hain?",
+          "options": [
+            "106",
+            "206",
+            "306",
+            "406"
+          ],
+          "answer": "206"
+        }
+      ],
+
+      "Physiology": [
+        {
+          "q": "Human heart ka primary function kya hai?",
+          "options": [
+            "Blood pump karna",
+            "Food digest karna",
+            "Bones banana",
+            "Air filter karna"
+          ],
+          "answer": "Blood pump karna"
+        }
+      ],
+
+      "Exercise Physiology": [
+        {
+          "q": "Regular exercise ka ek major benefit kya hai?",
+          "options": [
+            "Physical fitness improve hona",
+            "Fitness kam hona",
+            "Movement band hona",
+            "Sleep completely stop hona"
+          ],
+          "answer": "Physical fitness improve hona"
+        }
+      ],
+
+      "Health & Fitness": [
+        {
+          "q": "Fitness maintain karne ke liye kya important hai?",
+          "options": [
+            "Regular physical activity",
+            "No movement",
+            "Only junk food",
+            "Only screen time"
+          ],
+          "answer": "Regular physical activity"
+        }
+      ],
+
+      "Physical Fitness Tests": [
+        {
+          "q": "Physical fitness test ka purpose kya hota hai?",
+          "options": [
+            "Fitness level assess karna",
+            "Sirf attendance lena",
+            "Sirf height dekhna",
+            "Sirf naam likhna"
+          ],
+          "answer": "Fitness level assess karna"
+        }
+      ],
+
+      "Training Methods": [
+        {
+          "q": "Interval training mein kya hota hai?",
+          "options": [
+            "Work aur recovery periods alternate hote hain",
+            "Sirf rest hota hai",
+            "Sirf sitting hoti hai",
+            "Exercise kabhi nahi hoti"
+          ],
+          "answer": "Work aur recovery periods alternate hote hain"
+        }
+      ],
+
+      "Training Principles": [
+        {
+          "q": "Progressive overload ka matlab kya hai?",
+          "options": [
+            "Training load ko gradually badhana",
+            "Training completely band karna",
+            "Sirf rest karna",
+            "Exercise avoid karna"
+          ],
+          "answer": "Training load ko gradually badhana"
+        }
+      ],
+
+      "Sports Psychology": [
+        {
+          "q": "Sports psychology kis cheez ka study karti hai?",
+          "options": [
+            "Sport mein psychological factors",
+            "Only weather",
+            "Only equipment",
+            "Only stadiums"
+          ],
+          "answer": "Sport mein psychological factors"
+        }
+      ],
+
+      "Nutrition": [
+        {
+          "q": "Balanced diet mein kya hota hai?",
+          "options": [
+            "Different essential nutrients",
+            "Sirf sugar",
+            "Sirf fat",
+            "Sirf water"
+          ],
+          "answer": "Different essential nutrients"
+        }
+      ],
+
+      "Yoga": [
+        {
+          "q": "Yoga ki historical roots kis country se associated hain?",
+          "options": [
+            "India",
+            "Brazil",
+            "Canada",
+            "Australia"
+          ],
+          "answer": "India"
+        }
+      ]
     }
   }
 }
