@@ -1,50 +1,45 @@
 {
-  "teaching": [
-    {"q": "HTML ka full form kya hai?", "options": ["HyperText Markup Language", "High Text Machine Language", "HyperTransfer Markup Language", "None"], "answer": "HyperText Markup Language"},
-    {"q": "Python kis type ki language hai?", "options": ["Compiled", "Interpreted", "Assembly", "Machine"], "answer": "Interpreted"},
-    {"q": "Bharat ki rajdhani kya hai?", "options": ["Mumbai", "Delhi", "Kolkata", "Chennai"], "answer": "Delhi"},
-    {"q": "Bharat ke pehle Pradhan Mantri kaun the?", "options": ["Mahatma Gandhi", "Jawaharlal Nehru", "Sardar Patel", "Dr. Rajendra Prasad"], "answer": "Jawaharlal Nehru"},
-    {"q": "Paani ka rasayanik formula kya hai?", "options": ["H2O", "CO2", "O2", "NaCl"], "answer": "H2O"},
-    {"q": "Bharat kis saal azad hua?", "options": ["1945", "1947", "1950", "1942"], "answer": "1947"},
-    {"q": "Sabse bada grah kaunsa hai?", "options": ["Mars", "Earth", "Jupiter", "Venus"], "answer": "Jupiter"},
-    {"q": "World Wide Web (WWW) kisne banaya?", "options": ["Bill Gates", "Tim Berners-Lee", "Steve Jobs", "Elon Musk"], "answer": "Tim Berners-Lee"},
-    {"q": "Bharat mein kitne rajya hain?", "options": ["28", "29", "27", "30"], "answer": "28"},
-    {"q": "Taj Mahal kis shehar mein hai?", "options": ["Agra", "Delhi", "Jaipur", "Lucknow"], "answer": "Agra"}
-  ],
-  "sports": [
-    {"q": "Football match mein kitne khiladi hote hain (ek team)?", "options": ["9", "10", "11", "12"], "answer": "11"},
-    {"q": "Bharat ka rashtriya khel kya hai?", "options": ["Cricket", "Hockey", "Kabaddi", "Football"], "answer": "Hockey"},
-    {"q": "Cricket mein ek over mein kitni balls hoti hain?", "options": ["5", "6", "7", "8"], "answer": "6"},
-    {"q": "Olympic Games kitne saal mein ek baar hote hain?", "options": ["2", "4", "5", "3"], "answer": "4"},
-    {"q": "Kapil Dev kis khel se jude the?", "options": ["Hockey", "Cricket", "Football", "Badminton"], "answer": "Cricket"},
-    {"q": "Badminton mein match jeetne ke liye kitne points chahiye (ek game)?", "options": ["11", "15", "21", "25"], "answer": "21"},
-    {"q": "FIFA World Cup kis khel se sambandhit hai?", "options": ["Football", "Cricket", "Tennis", "Hockey"], "answer": "Football"},
-    {"q": "Sachin Tendulkar kis khel ke liye mashoor hain?", "options": ["Cricket", "Football", "Hockey", "Badminton"], "answer": "Cricket"},
-    {"q": "Basketball match mein ek team mein kitne khiladi hote hain?", "options": ["5", "6", "7", "11"], "answer": "5"},
-    {"q": "Tennis mein 'Grand Slam' mein kitne tournaments hote hain?", "options": ["2", "3", "4", "5"], "answer": "4"}
-  ],
-  "music": [
-    {"q": "Bharat ka rashtriya geet kaunsa hai?", "options": ["Jana Gana Mana", "Vande Mataram", "Sare Jahan Se Achha", "Saraswati Vandana"], "answer": "Vande Mataram"},
-    {"q": "Tabla kis type ka instrument hai?", "options": ["String", "Percussion", "Wind", "Electronic"], "answer": "Percussion"},
-    {"q": "Bharat ka rashtriya gaan kisne likha tha?", "options": ["Rabindranath Tagore", "Bankim Chandra", "Sarojini Naidu", "Premchand"], "answer": "Rabindranath Tagore"},
-    {"q": "Sitar mein lagbhag kitni taarein hoti hain?", "options": ["4", "6-7", "18-21", "10"], "answer": "18-21"},
-    {"q": "Lata Mangeshkar kis field se juri thi?", "options": ["Playback Singing", "Acting", "Dance", "Direction"], "answer": "Playback Singing"},
-    {"q": "Harmonium kis type ka instrument hai?", "options": ["Wind + Keys", "String", "Percussion", "Electronic"], "answer": "Wind + Keys"},
-    {"q": "Kathak dance kahan se shuru hua?", "options": ["Uttar Pradesh", "Tamil Nadu", "Kerala", "Punjab"], "answer": "Uttar Pradesh"},
-    {"q": "Guitar mein aam taur par kitni strings hoti hain?", "options": ["4", "5", "6", "7"], "answer": "6"},
-    {"q": "A.R. Rahman kis field mein famous hain?", "options": ["Music Composing", "Acting", "Cricket", "Politics"], "answer": "Music Composing"},
-    {"q": "Dhol kis type ka instrument hai?", "options": ["Percussion", "String", "Wind", "Electronic"], "answer": "Percussion"}
-  ],
-  "physical": [
-    {"q": "Insaan ke sharir mein kitni haddiyan hoti hain?", "options": ["206", "300", "150", "250"], "answer": "206"},
-    {"q": "Insaan ka dil sharir ke kis hisse mein hota hai?", "options": ["Left side", "Right side", "Center", "Peeth"], "answer": "Left side"},
-    {"q": "Roz kitne ghante ki neend zaroori hai (adult)?", "options": ["4-5", "6-7", "7-9", "10-12"], "answer": "7-9"},
-    {"q": "Insaan ke sharir ka sabse bada organ kaunsa hai?", "options": ["Dil", "Dimag", "Twacha (Skin)", "Liver"], "answer": "Twacha (Skin)"},
-    {"q": "Cardio exercise ka example kya hai?", "options": ["Running", "Weight lifting", "Stretching", "Yoga Nidra"], "answer": "Running"},
-    {"q": "Healthy insaan ka average body temperature kitna hota hai?", "options": ["36-37°C", "40°C", "34°C", "42°C"], "answer": "36-37°C"},
-    {"q": "Insaan mein kitni indriyan (senses) hoti hain?", "options": ["4", "5", "6", "7"], "answer": "5"},
-    {"q": "Yoga kahan se shuru hua tha?", "options": ["Bharat", "China", "Japan", "Greece"], "answer": "Bharat"},
-    {"q": "Body ko hydrate rakhne ke liye kya peena chahiye?", "options": ["Paani", "Soda", "Chai", "Coffee"], "answer": "Paani"},
-    {"q": "Exercise se kaunsa hormone release hota hai jo mood accha karta hai?", "options": ["Endorphin", "Insulin", "Melatonin", "Cortisol"], "answer": "Endorphin"}
-  ]
+  "teaching": {
+    "Exam Name 1": {
+      "Subject 1": [
+        {
+          "q": "Question yahan",
+          "options": [
+            "Option A",
+            "Option B",
+            "Option C",
+            "Option D"
+          ],
+          "answer": "Option A"
+        }
+      ],
+      "Subject 2": []
+    },
+
+    "Exam Name 2": {
+      "Subject 1": [],
+      "Subject 2": []
+    }
+  },
+
+  "sports": {
+    "Sports General Knowledge": {
+      "General Sports": [
+        {
+          "q": "Example question",
+          "options": [
+            "A",
+            "B",
+            "C",
+            "D"
+          ],
+          "answer": "A"
+        }
+      ]
+    }
+  },
+
+  "music": {},
+
+  "physical": {}
 }
