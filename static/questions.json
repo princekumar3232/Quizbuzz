@@ -1,45 +1,59 @@
 {
   "teaching": {
-    "Exam Name 1": {
-      "Subject 1": [
+    "Teaching Question Bank": {
+      "General Knowledge": [
         {
-          "q": "Question yahan",
+          "q": "Bharat ki rajdhani kya hai?",
           "options": [
-            "Option A",
-            "Option B",
-            "Option C",
-            "Option D"
+            "Mumbai",
+            "Delhi",
+            "Kolkata",
+            "Chennai"
           ],
-          "answer": "Option A"
+          "answer": "Delhi"
         }
       ],
-      "Subject 2": []
-    },
 
-    "Exam Name 2": {
-      "Subject 1": [],
-      "Subject 2": []
+      "Pedagogy": []
     }
   },
 
   "sports": {
-    "Sports General Knowledge": {
-      "General Sports": [
-        {
-          "q": "Example question",
-          "options": [
-            "A",
-            "B",
-            "C",
-            "D"
-          ],
-          "answer": "A"
-        }
-      ]
+    "Sports Question Bank": {
+      "Cricket": [],
+      "Football": [],
+      "Hockey": [],
+      "Athletics": []
     }
   },
 
-  "music": {},
+  "music": {
+    "Music Question Bank": {
+      "Music Fundamentals": [],
+      "Notes & Scales": [],
+      "Intervals": [],
+      "Major Scales": [],
+      "Minor Scales": [],
+      "Chords": [],
+      "Harmony": [],
+      "Rhythm": [],
+      "Indian Music": [],
+      "Western Classical Music": []
+    }
+  },
 
-  "physical": {}
+  "physical": {
+    "Physical Education Question Bank": {
+      "Anatomy": [],
+      "Physiology": [],
+      "Exercise Physiology": [],
+      "Health & Fitness": [],
+      "Physical Fitness Tests": [],
+      "Training Methods": [],
+      "Training Principles": [],
+      "Sports Psychology": [],
+      "Nutrition": [],
+      "Yoga": []
+    }
+  }
 }
