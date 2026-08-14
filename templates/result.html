@@ -8,74 +8,17 @@ Result
 
 <div class="result-card">
 
-    <h2>
-        🎉 Test Complete
-    </h2>
-
-
-    <p>
-        {{ category }}
-    </p>
-
-    <p>
-        {{ exam }}
-    </p>
-
-    <p>
-        {{ subject }}
-    </p>
-
+    <h2>🎉 Test Complete!</h2>
 
     <p class="score-text">
-
-        Score:
-        {{ score }}
-        /
-        {{ total }}
-
+        Score: {{ score }} / {{ total }}
     </p>
-
-
-    {% if total > 0 %}
-
-    <p>
-
-        Percentage:
-        {{ "%.1f"|format((score / total) * 100) }}%
-
-    </p>
-
-    {% endif %}
-
-
-    <a
-        href="{{ url_for(
-            'subjects',
-            category=category,
-            exam=exam
-        ) }}"
-        class="start-btn"
-    >
-        Try Another Subject
-    </a>
-
-
-    <a
-        href="{{ url_for(
-            'exams',
-            category=category
-        ) }}"
-        class="start-btn secondary-btn"
-    >
-        Change Exam
-    </a>
-
 
     <a
         href="{{ url_for('index') }}"
-        class="start-btn secondary-btn"
+        class="start-btn"
     >
-        Home
+        Back to Home
     </a>
 
 </div>
