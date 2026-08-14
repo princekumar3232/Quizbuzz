@@ -1,4 +1,4 @@
-import os
+                import os
 import json
 from pathlib import Path
 from functools import wraps
@@ -7,6 +7,7 @@ import psycopg
 from psycopg.rows import dict_row
 from flask import Flask, render_template, request, redirect, url_for, session, abort
 from werkzeug.security import generate_password_hash, check_password_hash
+
 
 app = Flask(__name__)
 
