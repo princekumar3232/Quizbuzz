@@ -1,113 +1,165 @@
 .page-header {
-    max-width: 600px;
-    margin: 25px auto;
+    text-align: center;
+    margin: 25px 0;
 }
 
 .page-header h2 {
-    margin-bottom: 5px;
+    margin-bottom: 6px;
 }
 
 .page-header p {
     color: #777;
 }
 
-.back-btn {
-    display: inline-block;
-    margin-bottom: 15px;
-    text-decoration: none;
-    color: #833ab4;
-    font-weight: bold;
+.exam-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    max-width: 600px;
+    margin: 20px auto;
 }
 
-.exam-grid,
-.subject-grid {
+.exam-card {
+    background: white;
+    padding: 22px;
+    border-radius: 14px;
+    text-decoration: none;
+    color: #222;
+    text-align: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+    transition: 0.2s;
+}
+
+.exam-card:hover {
+    transform: translateY(-3px);
+}
+
+.exam-icon {
+    font-size: 32px;
+    margin-bottom: 8px;
+}
+
+.exam-title {
+    font-weight: bold;
+    font-size: 17px;
+}
+
+.exam-count {
+    margin-top: 6px;
+    color: #777;
+    font-size: 13px;
+}
+
+.subject-list {
     max-width: 600px;
-    margin: 0 auto 40px;
+    margin: 20px auto;
     display: flex;
     flex-direction: column;
     gap: 12px;
 }
 
-.exam-card,
 .subject-card {
     background: white;
+    padding: 18px;
     border-radius: 12px;
-    padding: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+
     display: flex;
     align-items: center;
-    gap: 14px;
-    text-decoration: none;
-    color: #222;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
-    transition: transform 0.15s ease;
+    justify-content: space-between;
+    gap: 15px;
 }
 
-.exam-card:hover,
-.subject-card:hover {
-    transform: translateY(-2px);
-}
-
-.exam-number {
-    width: 42px;
-    height: 42px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-weight: bold;
-    background: linear-gradient(
-        135deg,
-        #833ab4,
-        #e1306c
-    );
-}
-
-.exam-info,
-.subject-card > div:nth-child(2) {
-    flex: 1;
-}
-
-.exam-info h3,
 .subject-card h3 {
-    margin: 0 0 5px;
-    font-size: 16px;
+    margin: 0;
 }
 
-.exam-info p,
 .subject-card p {
-    margin: 0;
-    color: #888;
+    margin: 5px 0 0;
+    color: #777;
     font-size: 13px;
 }
 
-.subject-icon {
-    font-size: 28px;
+.start-btn {
+    display: inline-block;
+    padding: 9px 15px;
+    border-radius: 7px;
+    background: linear-gradient(
+        90deg,
+        #833ab4,
+        #e1306c
+    );
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+    white-space: nowrap;
 }
 
-.arrow {
-    font-size: 22px;
-    color: #c13584;
+.disabled-btn {
+    padding: 9px 15px;
+    border: none;
+    border-radius: 7px;
+    background: #ddd;
+    color: #777;
 }
 
-.quiz-top {
-    display: flex;
-    justify-content: space-between;
-    gap: 10px;
-    flex-wrap: wrap;
+.back-btn {
+    display: block;
+    max-width: 600px;
+    margin: 20px auto;
+    color: #833ab4;
+    text-decoration: none;
+    font-weight: bold;
 }
 
-.secondary-btn {
-    background: #eee !important;
-    color: #333 !important;
+.error-box {
+    background: #ffe5e5;
+    color: #c0392b;
+    padding: 12px;
+    border-radius: 8px;
+    max-width: 600px;
+    margin: 15px auto;
 }
 
 .feedback-card {
     background: white;
-    padding: 32px;
-    border-radius: 12px;
-    max-width: 400px;
+    padding: 30px;
+    max-width: 500px;
     margin: 40px auto;
+    border-radius: 12px;
     text-align: center;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+}
+
+.feedback-card.correct {
+    border-top: 6px solid #00b894;
+}
+
+.feedback-card.wrong {
+    border-top: 6px solid #d63031;
+}
+
+.answer-box {
+    background: #f4f5fb;
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 20px;
+}
+
+@media (max-width: 600px) {
+
+    .exam-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .subject-card {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .start-btn,
+    .disabled-btn {
+        width: 100%;
+        text-align: center;
+    }
 }
