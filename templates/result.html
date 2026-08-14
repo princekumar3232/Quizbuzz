@@ -16,11 +16,13 @@ Result
 
     <p>
         Percentage:
+
         {% if total > 0 %}
             {{ ((score / total) * 100)|round(2) }}%
         {% else %}
             0%
         {% endif %}
+
     </p>
 
     <br>
