@@ -1,20 +1,10 @@
 {
-  "name": "QuizBuzz",
-  "short_name": "QuizBuzz",
+  "name": "QuizApp",
+  "short_name": "QuizApp",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#ec4899",
-  "icons": [
-    {
-      "src": "/static/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "/static/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    }
-  ]
+  "background_color": "#f4f5fb",
+  "theme_color": "#833ab4",
+  "description": "Online Quiz and Exam Practice App",
+  "icons": []
 }
