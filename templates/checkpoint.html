@@ -8,52 +8,23 @@ Checkpoint
 
 <div class="checkpoint-card">
 
-    <h2>
-        🏁 Checkpoint
-    </h2>
+    <h2>🎯 Checkpoint</h2>
 
     <p>
-        {{ q_index }} questions complete
+        {{ q_index }} questions complete.
     </p>
 
-    <p class="score-text">
-        Score: {{ score }} / {{ q_index }}
-    </p>
+    <h3>
+        Current Score:
+        {{ score }}
+    </h3>
 
-
-    {% if feedback.is_correct %}
-
-        <p>
-            Last answer: ✅ Correct
-        </p>
-
-    {% else %}
-
-        <p>
-            Last answer: ❌ Wrong
-        </p>
-
-        <p>
-            Correct:
-            <strong>
-                {{ feedback.correct_answer }}
-            </strong>
-        </p>
-
-    {% endif %}
-
-
-    <form method="POST">
-
-        <button
-            name="action"
-            value="continue"
-            class="next-btn"
-        >
-            Continue Test →
-        </button>
-
-    </form>
+    <a
+        class="btn"
+        href="{{ url_for('question') }}"
+    >
+        Continue →
+    </a>
 
 </div>
 
