@@ -1,66 +1,52 @@
 {% extends "base.html" %}
 
 {% block title %}
-{{ category_label }} Exams
+{{ category_label }} - Exams
 {% endblock %}
 
 {% block content %}
 
 <div class="page-header">
-
-    <a
-        href="{{ url_for('index') }}"
-        class="back-btn"
-    >
-        ← Home
-    </a>
-
     <h2>{{ category_label }}</h2>
-
-    <p>
-        Exam select karein
-    </p>
-
+    <p>Exam / Question Bank select karein</p>
 </div>
-
 
 <div class="exam-grid">
 
     {% for exam_name, subjects in exams.items() %}
 
     <a
+        class="exam-card"
         href="{{ url_for(
             'subjects',
             category=category,
             exam=exam_name
         ) }}"
-        class="exam-card"
     >
 
-        <div class="exam-number">
-            {{ loop.index }}
+        <div class="exam-icon">
+            📝
         </div>
 
-        <div class="exam-info">
-
-            <h3>
-                {{ exam_name }}
-            </h3>
-
-            <p>
-                {{ subjects|length }} Subjects
-            </p>
-
+        <div class="exam-title">
+            {{ exam_name }}
         </div>
 
-        <span class="arrow">
-            →
-        </span>
+        <div class="exam-count">
+            {{ subjects|length }} Subjects
+        </div>
 
     </a>
 
     {% endfor %}
 
 </div>
+
+<a
+    href="{{ url_for('index') }}"
+    class="back-btn"
+>
+    ← Home
+</a>
 
 {% endblock %}
