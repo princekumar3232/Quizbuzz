@@ -11,14 +11,32 @@ Result
     <h2>🎉 Test Complete!</h2>
 
     <p class="score-text">
-        Score: {{ score }} / {{ total }}
+        {{ score }} / {{ total }}
     </p>
 
+    <p>
+        Percentage:
+        {% if total > 0 %}
+            {{ ((score / total) * 100)|round(2) }}%
+        {% else %}
+            0%
+        {% endif %}
+    </p>
+
+    <br>
+
     <a
+        class="btn"
         href="{{ url_for('index') }}"
-        class="start-btn"
     >
-        Back to Home
+        🏠 Home
+    </a>
+
+    <a
+        class="btn"
+        href="{{ url_for('leaderboard') }}"
+    >
+        🏆 Leaderboard
     </a>
 
 </div>
