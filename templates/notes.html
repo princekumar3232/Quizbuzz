@@ -11,9 +11,11 @@ Notes
     <h2>📝 My Notes</h2>
 
     {% if error %}
+
         <p class="error">
             {{ error }}
         </p>
+
     {% endif %}
 
     <form
@@ -59,7 +61,11 @@ Notes
 {% else %}
 
 <div class="card">
-    <p>Abhi koi notes nahi hain.</p>
+
+    <p>
+        Abhi koi notes nahi hain.
+    </p>
+
 </div>
 
 {% endfor %}
