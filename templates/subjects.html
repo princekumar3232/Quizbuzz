@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}
+{{ exam }} - Subjects
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+
+    <h2>{{ exam }}</h2>
+
+    <p>
+        Subject select karke test start karein
+    </p>
+
+</div>
+
+{% if error %}
+
+<div class="error-box">
+    {{ error }}
+</div>
+
+{% endif %}
+
+<div class="subject-list">
+
+    {% for subject_name, questions in subjects.items() %}
+
+    <div class="subject-card">
+
+        <div>
+
+            <h3>
+                {{ loop.index }}.
+                {{ subject_name }}
+            </h3>
+
+            <p>
+                {{ questions|length }} Questions
+            </p>
+
+        </div>
+
+        {% if questions %}
+
+        <a
+            class="start-btn"
+            href="{{ url_for(
+                'start_test',
+                category=category,
+                exam=exam,
+                subject=subject_name
+            ) }}"
+        >
+            Start Test
+        </a>
+
+        {% else %}
+
+        <button
+            class="disabled-btn"
+            disabled
+        >
+            Questions Soon
+        </button>
+
+        {% endif %}
+
+    </div>
+
+    {% endfor %}
+
+</div>
+
+<a
+    href="{{ url_for(
+        'exams',
+        category=category
+    ) }}"
+    class="back-btn"
+>
+    ← Back to Exams
+</a>
+
+{% endblock %}
