@@ -1,51 +1,86 @@
 {% extends "base.html" %}
 
+
 {% block title %}
+
 Question {{ q_number }}
+
 {% endblock %}
+
 
 {% block content %}
 
+
 <div class="quiz-card">
 
-    <p class="progress">
 
-        {{ category_label }}
+    <div class="quiz-top">
 
-        {% if exam %}
-            · {{ exam }}
-        {% endif %}
 
-        {% if subject %}
-            · {{ subject }}
-        {% endif %}
+        <div>
 
-        <br>
+            <p class="eyebrow">
+                {{ category_label }}
+            </p>
 
-        Question {{ q_number }} / {{ total }}
+            <p class="quiz-name">
+                {{ exam }}
+            </p>
 
-    </p>
+        </div>
 
-    <p class="timer">
-        ⏱️
-        <span id="timeLeft">
+
+        <div class="question-counter">
+
+            {{ q_number }} / {{ total }}
+
+        </div>
+
+
+    </div>
+
+
+    <div class="progress-bar">
+
+        <div
+            class="progress-fill"
+            style="width: {{ ((q_number / total) * 100)|round(0) }}%;"
+        ></div>
+
+    </div>
+
+
+    <div class="timer-box">
+
+        ⏱️ Time Left:
+
+        <strong id="timeLeft">
             {{ time_limit }}
-        </span>
-        seconds
-    </p>
+        </strong>
 
-    <h3>
+        seconds
+
+    </div>
+
+
+    <h2 class="question-text">
+
         {{ question }}
-    </h3>
+
+    </h2>
+
 
     <form
         method="POST"
         id="quizForm"
     >
 
+
         {% for option in options %}
 
+
         <label class="option-label">
+
 
             <input
                 type="radio"
@@ -54,22 +89,33 @@ Question {{ q_number }}
                 required
             >
 
-            {{ option }}
+
+            <span>
+                {{ option }}
+            </span>
+
 
         </label>
 
+
         {% endfor %}
+
 
         <button
             type="submit"
-            class="full-btn"
+            class="btn full-btn"
         >
-            Submit Answer
+
+            Submit Answer →
+
         </button>
+
 
     </form>
 
+
 </div>
+
 
 <script>
 
@@ -81,22 +127,49 @@ const timerElement =
 const formElement =
     document.getElementById("quizForm");
 
-const timer = setInterval(function () {
 
-    timeLeft--;
+const timer = setInterval(
+    function () {
 
-    timerElement.textContent = timeLeft;
+        timeLeft--;
 
-    if (timeLeft <= 0) {
+        timerElement.textContent =
+            timeLeft;
 
-        clearInterval(timer);
 
-        formElement.submit();
+        if (timeLeft <= 0) {
 
-    }
+            clearInterval(timer);
 
-}, 1000);
+            /*
+             * Timer khatam hone par
+             * bina answer ke submit.
+             *
+             * Required radio ki wajah se
+             * browser submit block kar sakta hai,
+             * isliye required remove kar rahe hain.
+             */
+
+            const radios =
+                formElement.querySelectorAll(
+                    'input[name="option"]'
+                );
+
+            radios.forEach(
+                function (radio) {
+                    radio.required = false;
+                }
+            );
+
+            formElement.submit();
+
+        }
+
+    },
+    1000
+);
 
 </script>
+
 
 {% endblock %}
