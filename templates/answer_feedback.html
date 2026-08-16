@@ -1,69 +1,130 @@
 {% extends "base.html" %}
 
+
 {% block title %}
-Answer
+
+Answer Result
+
 {% endblock %}
+
 
 {% block content %}
 
+
 <div class="result-card">
+
 
     {% if feedback.is_correct %}
 
-        <div class="feedback-card correct">
 
-            <h2>✅ Correct!</h2>
+    <div class="feedback-card correct">
 
-            <p>
-                Bahut badhiya.
-            </p>
-
+        <div class="feedback-icon">
+            ✅
         </div>
+
+        <h1>
+            Correct Answer!
+        </h1>
+
+        <p>
+            Bahut badhiya! Tumhara answer sahi hai.
+        </p>
+
+    </div>
+
 
     {% else %}
 
-        <div class="feedback-card wrong">
 
-            <h2>❌ Wrong</h2>
+    <div class="feedback-card wrong">
+
+        <div class="feedback-icon">
+            ❌
+        </div>
+
+        <h1>
+            Wrong Answer
+        </h1>
+
+
+        <div class="answer-box">
 
             <p>
-                Tumhara answer:
+
+                <span class="answer-label">
+                    Tumhara answer:
+                </span>
+
                 <strong>
                     {{ feedback.selected or "No Answer" }}
                 </strong>
+
             </p>
 
+
             <p>
-                Correct answer:
-                <strong>
+
+                <span class="answer-label">
+                    Correct answer:
+                </span>
+
+                <strong class="correct-answer">
                     {{ feedback.correct_answer }}
                 </strong>
+
             </p>
 
         </div>
 
+    </div>
+
+
     {% endif %}
+
+
+    <div class="feedback-progress">
+
+        Question
+        {{ q_index }}
+        complete
+
+        /
+        {{ total }}
+
+    </div>
+
 
     {% if q_index < total %}
 
-        <a
-            class="btn"
-            href="{{ url_for('question') }}"
-        >
-            Next Question →
-        </a>
+
+    <a
+        class="btn full-btn"
+        href="{{ url_for('question') }}"
+    >
+
+        Next Question →
+
+    </a>
+
 
     {% else %}
 
-        <a
-            class="btn"
-            href="{{ url_for('question') }}"
-        >
-            View Result
-        </a>
+
+    <a
+        class="btn full-btn"
+        href="{{ url_for('question') }}"
+    >
+
+        🎉 View Final Result
+
+    </a>
+
 
     {% endif %}
 
+
 </div>
+
 
 {% endblock %}
