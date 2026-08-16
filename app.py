@@ -3,6 +3,7 @@ import json
 import sqlite3
 import re
 import unicodedata
+
 from pathlib import Path
 from functools import wraps
 
@@ -30,7 +31,7 @@ app = Flask(__name__)
 
 app.secret_key = os.environ.get(
     "SECRET_KEY",
-    "quizapp-secret-key-change-this"
+    "quizbuzz-change-this-secret-key"
 )
 
 
@@ -45,16 +46,16 @@ QUESTIONS_FILE = (
 )
 
 DATABASE_FILE = (
-    BASE_DIR / "quizapp.db"
+    BASE_DIR / "quizbuzz.db"
 )
 
 
-# =========================================================
-# SETTINGS
-# =========================================================
-
 TIME_PER_QUESTION = 30
 
+
+# =========================================================
+# CATEGORY LABELS
+# =========================================================
 
 CATEGORY_LABELS = {
     "teaching": "🎓 Teaching",
@@ -104,7 +105,6 @@ def init_db():
                 username TEXT NOT NULL,
                 text TEXT NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-
                 FOREIGN KEY(user_id)
                 REFERENCES users(id)
                 ON DELETE CASCADE
@@ -118,8 +118,25 @@ def init_db():
         conn.close()
 
 
+# Initialize database
+try:
+
+    init_db()
+
+    print(
+        "Database initialized successfully."
+    )
+
+except Exception as error:
+
+    print(
+        "Database initialization error:",
+        error
+    )
+
+
 # =========================================================
-# LOAD QUESTIONS
+# QUESTIONS
 # =========================================================
 
 def load_questions():
@@ -163,197 +180,13 @@ QUESTIONS_DATA = load_questions()
 
 
 # =========================================================
-# QUESTION HELPERS
-# =========================================================
-
-def get_category_data(category):
-
-    category_data = QUESTIONS_DATA.get(
-        category
-    )
-
-    if not isinstance(
-        category_data,
-        dict
-    ):
-        abort(404)
-
-    return category_data
-
-
-def get_exams_data(category):
-
-    category_data = get_category_data(
-        category
-    )
-
-    exams = category_data.get(
-        "exams",
-        {}
-    )
-
-    if not isinstance(
-        exams,
-        dict
-    ):
-        return {}
-
-    return exams
-
-
-def get_exam_questions(
-    category,
-    exam
-):
-
-    exams = get_exams_data(
-        category
-    )
-
-    if exam not in exams:
-        abort(404)
-
-    questions = exams[exam]
-
-    if not isinstance(
-        questions,
-        list
-    ):
-        return []
-
-    valid_questions = []
-
-    for question in questions:
-
-        if not isinstance(
-            question,
-            dict
-        ):
-            continue
-
-        text = question.get(
-            "q"
-        )
-
-        options = question.get(
-            "options"
-        )
-
-        answer = question.get(
-            "answer"
-        )
-
-        if not text:
-            continue
-
-        if not isinstance(
-            options,
-            list
-        ):
-            continue
-
-        if len(options) < 2:
-            continue
-
-        if answer is None:
-            continue
-
-        if str(answer).strip() == "":
-            continue
-
-        valid_questions.append(
-            question
-        )
-
-    return valid_questions
-
-
-def normalize_answer(value):
-
-    if value is None:
-        return ""
-
-    text = str(value)
-
-    text = unicodedata.normalize(
-        "NFKC",
-        text
-    )
-
-    text = text.strip().lower()
-
-    # Convert multiple spaces into one.
-    text = re.sub(
-        r"\s+",
-        " ",
-        text
-    )
-
-    # Remove punctuation only from
-    # the beginning/end.
-    text = text.strip(
-        " \t\r\n.,!?;:،۔"
-    )
-
-    return text
-
-
-def answers_match(
-    selected,
-    correct
-):
-
-    selected_normalized = (
-        normalize_answer(selected)
-    )
-
-    correct_normalized = (
-        normalize_answer(correct)
-    )
-
-    if not selected_normalized:
-        return False
-
-    if not correct_normalized:
-        return False
-
-    return (
-        selected_normalized
-        == correct_normalized
-    )
-
-
-# =========================================================
-# INITIALIZE DATABASE
-# =========================================================
-
-try:
-
-    init_db()
-
-    print(
-        "Database initialized successfully."
-    )
-
-except Exception as error:
-
-    print(
-        "Database initialization error:",
-        error
-    )
-
-
-# =========================================================
 # LOGIN REQUIRED
 # =========================================================
 
 def login_required(function):
 
     @wraps(function)
-    def wrapper(
-        *args,
-        **kwargs
-    ):
+    def wrapper(*args, **kwargs):
 
         if "user_id" not in session:
 
@@ -367,6 +200,271 @@ def login_required(function):
         )
 
     return wrapper
+
+
+# =========================================================
+# ANSWER NORMALIZATION
+# =========================================================
+
+def normalize_answer(value):
+
+    if value is None:
+
+        return ""
+
+    value = str(value)
+
+    value = unicodedata.normalize(
+        "NFKC",
+        value
+    )
+
+    value = value.strip().lower()
+
+    # Remove common punctuation
+    value = re.sub(
+        r"[.!?,;:]+",
+        "",
+        value
+    )
+
+    # Normalize brackets
+    value = value.replace(
+        "（",
+        "("
+    )
+
+    value = value.replace(
+        "）",
+        ")"
+    )
+
+    # Remove extra spaces
+    value = re.sub(
+        r"\s+",
+        " ",
+        value
+    )
+
+    return value.strip()
+
+
+def answers_match(selected, correct):
+
+    selected_normalized = normalize_answer(
+        selected
+    )
+
+    correct_normalized = normalize_answer(
+        correct
+    )
+
+    if not selected_normalized:
+        return False
+
+    if not correct_normalized:
+        return False
+
+    # Exact match
+    if selected_normalized == correct_normalized:
+        return True
+
+    # Handle answers such as:
+    #
+    # Selected:
+    # Sunil Gavaskar
+    #
+    # JSON answer:
+    # Sunil Gavaskar (Achieved against Pakistan...)
+    #
+    if correct_normalized.startswith(
+        selected_normalized
+    ):
+
+        remaining = correct_normalized[
+            len(selected_normalized):
+        ].strip()
+
+        if remaining.startswith("("):
+            return True
+
+    return False
+
+
+# =========================================================
+# QUESTION VALIDATION
+# =========================================================
+
+def clean_questions(question_list):
+
+    if not isinstance(
+        question_list,
+        list
+    ):
+
+        return []
+
+    valid_questions = []
+
+    for item in question_list:
+
+        if not isinstance(
+            item,
+            dict
+        ):
+
+            continue
+
+        question_text = item.get(
+            "q",
+            ""
+        )
+
+        options = item.get(
+            "options",
+            []
+        )
+
+        answer = item.get(
+            "answer",
+            ""
+        )
+
+        if not isinstance(
+            question_text,
+            str
+        ):
+
+            continue
+
+        if not question_text.strip():
+
+            continue
+
+        if not isinstance(
+            options,
+            list
+        ):
+
+            continue
+
+        # Broken questions with no options
+        # are not shown in the quiz.
+        if len(options) < 2:
+
+            continue
+
+        options = [
+            str(option).strip()
+            for option in options
+            if str(option).strip()
+        ]
+
+        if len(options) < 2:
+
+            continue
+
+        if not str(answer).strip():
+
+            continue
+
+        # Copy question so original JSON
+        # is never modified.
+        cleaned = dict(item)
+
+        cleaned["q"] = question_text.strip()
+
+        cleaned["options"] = options
+
+        cleaned["answer"] = str(
+            answer
+        ).strip()
+
+        valid_questions.append(
+            cleaned
+        )
+
+    return valid_questions
+
+
+# =========================================================
+# GET EXAM QUESTIONS
+# =========================================================
+
+def get_exam_questions(
+    category,
+    exam
+):
+
+    try:
+
+        category_data = QUESTIONS_DATA[
+            category
+        ]
+
+        exams_data = category_data.get(
+            "exams",
+            {}
+        )
+
+        exam_data = exams_data[
+            exam
+        ]
+
+    except (
+        KeyError,
+        TypeError
+    ):
+
+        return []
+
+    # Normal structure:
+    #
+    # "General Knowledge": [
+    #     {...},
+    #     {...}
+    # ]
+
+    if isinstance(
+        exam_data,
+        list
+    ):
+
+        return clean_questions(
+            exam_data
+        )
+
+    # Extra support in case a future exam
+    # contains subjects:
+    #
+    # "Exam": {
+    #     "Subject 1": [...],
+    #     "Subject 2": [...]
+    # }
+
+    if isinstance(
+        exam_data,
+        dict
+    ):
+
+        all_questions = []
+
+        for value in exam_data.values():
+
+            if isinstance(
+                value,
+                list
+            ):
+
+                all_questions.extend(
+                    value
+                )
+
+        return clean_questions(
+            all_questions
+        )
+
+    return []
 
 
 # =========================================================
@@ -416,9 +514,7 @@ def register():
                 (username,)
             )
 
-            existing = cur.fetchone()
-
-            if existing:
+            if cur.fetchone():
 
                 return render_template(
                     "register.html",
@@ -511,7 +607,8 @@ def login():
             return render_template(
                 "login.html",
                 error=(
-                    "Galat username ya password."
+                    "Galat username "
+                    "ya password."
                 )
             )
 
@@ -523,7 +620,8 @@ def login():
             return render_template(
                 "login.html",
                 error=(
-                    "Galat username ya password."
+                    "Galat username "
+                    "ya password."
                 )
             )
 
@@ -585,55 +683,37 @@ def index():
 @login_required
 def exams(category):
 
-    category_data = (
-        get_category_data(
-            category
-        )
+    if category not in QUESTIONS_DATA:
+
+        abort(404)
+
+    category_data = QUESTIONS_DATA[
+        category
+    ]
+
+    exams_data = category_data.get(
+        "exams",
+        {}
     )
 
-    exams_data = (
-        category_data.get(
-            "exams",
-            {}
+    category_label = category_data.get(
+        "label",
+        CATEGORY_LABELS.get(
+            category,
+            category.title()
         )
     )
-
-    category_label = (
-        category_data.get(
-            "label",
-            CATEGORY_LABELS.get(
-                category,
-                category.title()
-            )
-        )
-    )
-
-    exam_list = []
-
-    for exam_name in exams_data:
-
-        questions = (
-            get_exam_questions(
-                category,
-                exam_name
-            )
-        )
-
-        exam_list.append({
-            "name": exam_name,
-            "total": len(questions)
-        })
 
     return render_template(
         "exams.html",
         category=category,
         category_label=category_label,
-        exams=exam_list
+        exams=exams_data
     )
 
 
 # =========================================================
-# EXAM → SUBJECT/PREVIEW
+# EXAM → QUESTION BANK
 # =========================================================
 
 @app.route(
@@ -645,78 +725,80 @@ def subjects(
     exam
 ):
 
-    category_data = (
-        get_category_data(
-            category
-        )
+    if category not in QUESTIONS_DATA:
+
+        abort(404)
+
+    category_data = QUESTIONS_DATA[
+        category
+    ]
+
+    exams_data = category_data.get(
+        "exams",
+        {}
     )
 
-    questions = (
-        get_exam_questions(
+    if exam not in exams_data:
+
+        abort(404)
+
+    questions = get_exam_questions(
+        category,
+        exam
+    )
+
+    category_label = category_data.get(
+        "label",
+        CATEGORY_LABELS.get(
             category,
-            exam
+            category.title()
         )
     )
-
-    category_label = (
-        category_data.get(
-            "label",
-            CATEGORY_LABELS.get(
-                category,
-                category.title()
-            )
-        )
-    )
-
-    # Current JSON has:
-    #
-    # category
-    #     ↓
-    # exams
-    #     ↓
-    # exam name
-    #     ↓
-    # questions
-    #
-    # There is no separate "subject"
-    # field in the current JSON.
-    #
-    # Therefore the exam itself is
-    # treated as the quiz/subject.
-
-    subject = {
-        "name": exam,
-        "total": len(questions)
-    }
 
     return render_template(
         "subjects.html",
         category=category,
         category_label=category_label,
         exam=exam,
-        subjects=[subject]
+        question_count=len(
+            questions
+        )
     )
 
 
 # =========================================================
-# START TEST
+# START QUIZ
 # =========================================================
 
 @app.route(
-    "/category/<category>/exam/<path:exam>/subject/<path:subject>"
+    "/category/<category>/exam/<path:exam>/start"
 )
 @login_required
 def start_test(
     category,
-    exam,
-    subject
+    exam
 ):
 
-    questions = (
-        get_exam_questions(
-            category,
-            exam
-        )
+    if category not in QUESTIONS_DATA:
+
+        abort(404)
+
+    category_data = QUESTIONS_DATA[
+        category
+    ]
+
+    exams_data = category_data.get(
+        "exams",
+        {}
+    )
+
+    if exam not in exams_data:
+
+        abort(404)
+
+    questions = get_exam_questions(
+        category,
+        exam
     )
 
     if not questions:
@@ -724,50 +806,42 @@ def start_test(
         return render_template(
             "subjects.html",
             category=category,
-            category_label=CATEGORY_LABELS.get(
-                category,
-                category.title()
+            category_label=category_data.get(
+                "label",
+                CATEGORY_LABELS.get(
+                    category,
+                    category.title()
+                )
             ),
             exam=exam,
-            subjects=[
-                {
-                    "name": exam,
-                    "total": 0
-                }
-            ],
+            question_count=0,
             error=(
-                "Is quiz mein abhi "
-                "valid questions available nahi hain."
+                "Is exam mein abhi "
+                "valid questions available "
+                "nahi hain."
             )
         )
 
     # IMPORTANT:
     #
-    # Pura question list session mein
-    # store nahi kar rahe.
+    # Complete question list session/cookie
+    # mein save nahi kar rahe.
     #
-    # Isse large question bank ke
-    # cookie/session size ka problem
-    # nahi hoga.
+    # Sirf small values save hongi.
+    #
+    # This prevents large-cookie/session
+    # problems on Render.
 
-    session["quiz_category"] = (
-        category
-    )
+    session["quiz_category"] = category
 
-    session["quiz_exam"] = (
-        exam
-    )
-
-    session["quiz_subject"] = (
-        subject
-    )
-
-    session["score"] = 0
+    session["quiz_exam"] = exam
 
     session["q_index"] = 0
 
-    session["quiz_total"] = (
-        len(questions)
+    session["score"] = 0
+
+    session["quiz_total"] = len(
+        questions
     )
 
     return redirect(
@@ -794,21 +868,15 @@ def question():
         "quiz_exam"
     )
 
-    subject = session.get(
-        "quiz_subject"
-    )
-
     if not category or not exam:
 
         return redirect(
             url_for("index")
         )
 
-    questions = (
-        get_exam_questions(
-            category,
-            exam
-        )
+    questions = get_exam_questions(
+        category,
+        exam
     )
 
     if not questions:
@@ -823,18 +891,9 @@ def question():
             None
         )
 
-        session.pop(
-            "quiz_subject",
-            None
-        )
-
         return redirect(
             url_for("index")
         )
-
-    total = len(questions)
-
-    session["quiz_total"] = total
 
     q_index = int(
         session.get(
@@ -843,17 +902,20 @@ def question():
         )
     )
 
-    # =====================================================
-    # QUIZ FINISHED
-    # =====================================================
-
-    if q_index >= total:
+    # Quiz complete
+    if q_index >= len(
+        questions
+    ):
 
         final_score = int(
             session.get(
                 "score",
                 0
             )
+        )
+
+        total = len(
+            questions
         )
 
         save_best_score(
@@ -863,22 +925,24 @@ def question():
         return render_template(
             "result.html",
             score=final_score,
-            total=total
+            total=total,
+            category=category,
+            exam=exam
         )
 
+    current_question = questions[
+        q_index
+    ]
 
     # =====================================================
-    # CURRENT QUESTION
+    # ANSWER SUBMISSION
     # =====================================================
-
-    current_question = (
-        questions[q_index]
-    )
 
     if request.method == "POST":
 
         selected = request.form.get(
-            "option"
+            "option",
+            ""
         )
 
         correct_answer = (
@@ -893,77 +957,69 @@ def question():
             correct_answer
         )
 
+        current_score = int(
+            session.get(
+                "score",
+                0
+            )
+        )
+
         if is_correct:
 
+            current_score += 1
+
             session["score"] = (
-                int(
-                    session.get(
-                        "score",
-                        0
-                    )
-                ) + 1
+                current_score
             )
 
-        session["last_feedback"] = {
-
-            "is_correct": is_correct,
-
-            "selected": selected,
-
-            "correct_answer": (
-                correct_answer
-            )
-        }
-
+        # Move to next question
         session["q_index"] = (
             q_index + 1
         )
 
         return render_template(
             "answer_feedback.html",
-            feedback=(
-                session[
-                    "last_feedback"
-                ]
-            ),
+            feedback={
+                "is_correct": is_correct,
+                "selected": selected,
+                "correct_answer": correct_answer
+            },
             q_index=q_index + 1,
-            total=total
+            total=len(questions)
         )
-
 
     # =====================================================
     # SHOW QUESTION
     # =====================================================
 
+    category_data = QUESTIONS_DATA.get(
+        category,
+        {}
+    )
+
+    category_label = category_data.get(
+        "label",
+        CATEGORY_LABELS.get(
+            category,
+            category.title()
+        )
+    )
+
     return render_template(
         "question.html",
-
         question=current_question.get(
             "q",
             ""
         ),
-
         options=current_question.get(
             "options",
             []
         ),
-
         q_number=q_index + 1,
-
-        total=total,
-
+        total=len(questions),
         time_limit=TIME_PER_QUESTION,
-
-        category_label=(
-            CATEGORY_LABELS.get(
-                category,
-                category.title()
-            )
-        ),
-
-        exam=exam,
-
-        subject=subject
+        category_label=category_label,
+        exam=exam
     )
 
 
@@ -1080,7 +1136,6 @@ def notes():
                 url_for("notes")
             )
 
-
     conn = get_db()
 
     try:
@@ -1102,7 +1157,6 @@ def notes():
 
         conn.close()
 
-
     return render_template(
         "notes.html",
         notes=all_notes,
@@ -1114,9 +1168,7 @@ def notes():
 # LEADERBOARD
 # =========================================================
 
-@app.route(
-    "/leaderboard"
-)
+@app.route("/leaderboard")
 @login_required
 def leaderboard():
 
@@ -1140,7 +1192,6 @@ def leaderboard():
     finally:
 
         conn.close()
-
 
     return render_template(
         "leaderboard.html",
