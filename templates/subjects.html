@@ -1,16 +1,16 @@
 {% extends "base.html" %}
 
 {% block title %}
-Subjects
+{{ category_label }}
 {% endblock %}
 
 {% block content %}
 
 <div class="card">
 
-    <h2>{{ category_label }}</h2>
-
-    <h3>{{ exam }}</h3>
+    <p>
+        {{ category_label }}
+    </p>
 
     {% if error %}
         <p class="error">
@@ -22,29 +22,39 @@ Subjects
 
         {% for subject, questions in subjects.items() %}
 
-        <a
-            class="subject-card"
-            href="{{ url_for(
-                'start_test',
-                category=category,
-                exam=exam,
-                subject=subject
-            ) }}"
-        >
+        <div class="subject-card">
 
-            📖 {{ subject }}
+            <h3>
+                {{ subject }}
+            </h3>
 
-            <br><br>
+            <p>
+                Questions Available
+            </p>
 
-            <strong>
-                {{ questions|length }} Questions Available
-            </strong>
+            <a
+                class="btn full-btn"
+                href="{{ url_for(
+                    'start_test',
+                    category=category,
+                    exam=exam,
+                    subject=subject
+                ) }}"
+            >
+                🚀 Start Quiz
+            </a>
 
-        </a>
+        </div>
 
         {% endfor %}
 
     </div>
+
+    <br>
+
+    <a href="{{ url_for('exams', category=category) }}">
+        ← Back to Exams
+    </a>
 
 </div>
 
