@@ -11,17 +11,33 @@
     >
 
     <title>
-        {% block title %}QuizApp{% endblock %}
+        {% block title %}QuizBuzz{% endblock %}
     </title>
 
+    <!-- Main CSS -->
     <link
         rel="stylesheet"
         href="{{ url_for('static', filename='style.css') }}"
     >
 
+    <!-- PWA Manifest -->
     <link
         rel="manifest"
         href="{{ url_for('static', filename='manifest.json') }}"
+    >
+
+    <!-- Favicon -->
+    <link
+        rel="icon"
+        type="image/png"
+        sizes="32x32"
+        href="{{ url_for('static', filename='favicon-32.png') }}"
+    >
+
+    <!-- Apple / Mobile Icon -->
+    <link
+        rel="apple-touch-icon"
+        href="{{ url_for('static', filename='apple-touch-icon.png') }}"
     >
 
     <meta
@@ -36,7 +52,7 @@
 <nav class="navbar">
 
     <div class="logo">
-        🎯 QuizApp
+        🎯 QuizBuzz
     </div>
 
     {% if session.get("user_id") %}
@@ -65,6 +81,7 @@
 
 </nav>
 
+
 <main class="container">
 
     {% block content %}
@@ -72,17 +89,30 @@
 
 </main>
 
+
 <script>
 
 if ("serviceWorker" in navigator) {
+
     window.addEventListener("load", function () {
+
         navigator.serviceWorker.register(
-            "/static/service-worker.js"
-        );
+            "{{ url_for('static', filename='service-worker.js') }}"
+        ).catch(function(error) {
+
+            console.log(
+                "Service Worker registration failed:",
+                error
+            );
+
+        });
+
     });
+
 }
 
 </script>
 
 </body>
+
 </html>
