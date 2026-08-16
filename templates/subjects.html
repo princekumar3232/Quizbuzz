@@ -1,123 +1,51 @@
 {% extends "base.html" %}
 
-
 {% block title %}
-
-{{ exam }}
-
+Subjects
 {% endblock %}
-
 
 {% block content %}
 
+<div class="card">
 
-<div class="quiz-card">
+    <h2>{{ category_label }}</h2>
 
-
-    <p class="eyebrow">
-        {{ category_label }}
-    </p>
-
-
-    <h1>
-        {{ exam }}
-    </h1>
-
-
-    <p class="subtitle">
-        Question Bank
-    </p>
-
+    <h3>{{ exam }}</h3>
 
     {% if error %}
-
-        <div class="error-box">
-
+        <p class="error">
             {{ error }}
-
-        </div>
-
+        </p>
     {% endif %}
 
+    <div class="subject-grid">
 
-    {% if question_count > 0 %}
-
-
-    <div class="question-bank-card">
-
-
-        <div class="big-book-icon">
-            📖
-        </div>
-
-
-        <h2>
-            {{ exam }}
-        </h2>
-
-
-        <p>
-
-            {{ question_count }}
-
-            valid questions available
-
-        </p>
-
+        {% for subject, questions in subjects.items() %}
 
         <a
-            class="btn full-btn"
+            class="subject-card"
             href="{{ url_for(
                 'start_test',
                 category=category,
-                exam=exam
+                exam=exam,
+                subject=subject
             ) }}"
         >
 
-            🚀 Start Quiz
+            📖 {{ subject }}
+
+            <br><br>
+
+            <strong>
+                {{ questions|length }} Questions Available
+            </strong>
 
         </a>
 
+        {% endfor %}
 
     </div>
-
-
-    {% else %}
-
-
-    <div class="empty-card">
-
-        <h3>
-            Questions available nahi hain
-        </h3>
-
-        <p>
-            Is exam mein abhi valid questions nahi mile.
-        </p>
-
-    </div>
-
-
-    {% endif %}
-
-
-    <br>
-
-
-    <a
-        class="back-link"
-        href="{{ url_for(
-            'exams',
-            category=category
-        ) }}"
-    >
-
-        ← Back to Exams
-
-    </a>
-
 
 </div>
-
 
 {% endblock %}
