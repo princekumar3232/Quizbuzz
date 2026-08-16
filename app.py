@@ -1,6 +1,8 @@
 import os
 import json
 import sqlite3
+import re
+import unicodedata
 from pathlib import Path
 from functools import wraps
 
@@ -20,6 +22,10 @@ from werkzeug.security import (
 )
 
 
+# =========================================================
+# APP
+# =========================================================
+
 app = Flask(__name__)
 
 app.secret_key = os.environ.get(
@@ -28,11 +34,24 @@ app.secret_key = os.environ.get(
 )
 
 
+# =========================================================
+# PATHS
+# =========================================================
+
 BASE_DIR = Path(__file__).resolve().parent
 
-QUESTIONS_FILE = BASE_DIR / "static" / "questions.json"
+QUESTIONS_FILE = (
+    BASE_DIR / "static" / "questions.json"
+)
 
-DATABASE_FILE = BASE_DIR / "quizapp.db"
+DATABASE_FILE = (
+    BASE_DIR / "quizapp.db"
+)
+
+
+# =========================================================
+# SETTINGS
+# =========================================================
 
 TIME_PER_QUESTION = 30
 
@@ -41,13 +60,13 @@ CATEGORY_LABELS = {
     "teaching": "🎓 Teaching",
     "sports": "🏆 Sports",
     "music": "🎵 Music",
-    "physical": "🏃 Physical Education",
+    "physical": "🏃 Physical Education"
 }
 
 
-# =========================
+# =========================================================
 # DATABASE
-# =========================
+# =========================================================
 
 def get_db():
 
@@ -85,6 +104,7 @@ def init_db():
                 username TEXT NOT NULL,
                 text TEXT NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
                 FOREIGN KEY(user_id)
                 REFERENCES users(id)
                 ON DELETE CASCADE
@@ -98,9 +118,9 @@ def init_db():
         conn.close()
 
 
-# =========================
-# QUESTIONS
-# =========================
+# =========================================================
+# LOAD QUESTIONS
+# =========================================================
 
 def load_questions():
 
@@ -142,9 +162,170 @@ def load_questions():
 QUESTIONS_DATA = load_questions()
 
 
-# =========================
-# DATABASE INITIALIZATION
-# =========================
+# =========================================================
+# QUESTION HELPERS
+# =========================================================
+
+def get_category_data(category):
+
+    category_data = QUESTIONS_DATA.get(
+        category
+    )
+
+    if not isinstance(
+        category_data,
+        dict
+    ):
+        abort(404)
+
+    return category_data
+
+
+def get_exams_data(category):
+
+    category_data = get_category_data(
+        category
+    )
+
+    exams = category_data.get(
+        "exams",
+        {}
+    )
+
+    if not isinstance(
+        exams,
+        dict
+    ):
+        return {}
+
+    return exams
+
+
+def get_exam_questions(
+    category,
+    exam
+):
+
+    exams = get_exams_data(
+        category
+    )
+
+    if exam not in exams:
+        abort(404)
+
+    questions = exams[exam]
+
+    if not isinstance(
+        questions,
+        list
+    ):
+        return []
+
+    valid_questions = []
+
+    for question in questions:
+
+        if not isinstance(
+            question,
+            dict
+        ):
+            continue
+
+        text = question.get(
+            "q"
+        )
+
+        options = question.get(
+            "options"
+        )
+
+        answer = question.get(
+            "answer"
+        )
+
+        if not text:
+            continue
+
+        if not isinstance(
+            options,
+            list
+        ):
+            continue
+
+        if len(options) < 2:
+            continue
+
+        if answer is None:
+            continue
+
+        if str(answer).strip() == "":
+            continue
+
+        valid_questions.append(
+            question
+        )
+
+    return valid_questions
+
+
+def normalize_answer(value):
+
+    if value is None:
+        return ""
+
+    text = str(value)
+
+    text = unicodedata.normalize(
+        "NFKC",
+        text
+    )
+
+    text = text.strip().lower()
+
+    # Convert multiple spaces into one.
+    text = re.sub(
+        r"\s+",
+        " ",
+        text
+    )
+
+    # Remove punctuation only from
+    # the beginning/end.
+    text = text.strip(
+        " \t\r\n.,!?;:،۔"
+    )
+
+    return text
+
+
+def answers_match(
+    selected,
+    correct
+):
+
+    selected_normalized = (
+        normalize_answer(selected)
+    )
+
+    correct_normalized = (
+        normalize_answer(correct)
+    )
+
+    if not selected_normalized:
+        return False
+
+    if not correct_normalized:
+        return False
+
+    return (
+        selected_normalized
+        == correct_normalized
+    )
+
+
+# =========================================================
+# INITIALIZE DATABASE
+# =========================================================
 
 try:
 
@@ -162,14 +343,17 @@ except Exception as error:
     )
 
 
-# =========================
+# =========================================================
 # LOGIN REQUIRED
-# =========================
+# =========================================================
 
 def login_required(function):
 
     @wraps(function)
-    def wrapper(*args, **kwargs):
+    def wrapper(
+        *args,
+        **kwargs
+    ):
 
         if "user_id" not in session:
 
@@ -185,9 +369,9 @@ def login_required(function):
     return wrapper
 
 
-# =========================
+# =========================================================
 # REGISTER
-# =========================
+# =========================================================
 
 @app.route(
     "/register",
@@ -211,7 +395,10 @@ def register():
 
             return render_template(
                 "register.html",
-                error="Sabhi fields bharna zaroori hai."
+                error=(
+                    "Sabhi fields bharna "
+                    "zaroori hai."
+                )
             )
 
         conn = get_db()
@@ -229,12 +416,23 @@ def register():
                 (username,)
             )
 
-            if cur.fetchone():
+            existing = cur.fetchone()
+
+            if existing:
 
                 return render_template(
                     "register.html",
-                    error="Ye username pehle se registered hai."
+                    error=(
+                        "Ye username pehle se "
+                        "registered hai."
+                    )
                 )
+
+            password_hash = (
+                generate_password_hash(
+                    password
+                )
+            )
 
             cur.execute(
                 """
@@ -246,9 +444,7 @@ def register():
                 """,
                 (
                     username,
-                    generate_password_hash(
-                        password
-                    )
+                    password_hash
                 )
             )
 
@@ -267,9 +463,9 @@ def register():
     )
 
 
-# =========================
+# =========================================================
 # LOGIN
-# =========================
+# =========================================================
 
 @app.route(
     "/login",
@@ -314,7 +510,9 @@ def login():
 
             return render_template(
                 "login.html",
-                error="Galat username ya password."
+                error=(
+                    "Galat username ya password."
+                )
             )
 
         if not check_password_hash(
@@ -324,14 +522,18 @@ def login():
 
             return render_template(
                 "login.html",
-                error="Galat username ya password."
+                error=(
+                    "Galat username ya password."
+                )
             )
 
         session.clear()
 
         session["user_id"] = user["id"]
 
-        session["username"] = user["username"]
+        session["username"] = (
+            user["username"]
+        )
 
         return redirect(
             url_for("index")
@@ -342,9 +544,9 @@ def login():
     )
 
 
-# =========================
+# =========================================================
 # LOGOUT
-# =========================
+# =========================================================
 
 @app.route("/logout")
 def logout():
@@ -356,9 +558,9 @@ def logout():
     )
 
 
-# =========================
+# =========================================================
 # HOME
-# =========================
+# =========================================================
 
 @app.route("/")
 @login_required
@@ -373,9 +575,9 @@ def index():
     )
 
 
-# =========================
-# EXAMS
-# =========================
+# =========================================================
+# CATEGORY → EXAMS
+# =========================================================
 
 @app.route(
     "/category/<category>"
@@ -383,62 +585,122 @@ def index():
 @login_required
 def exams(category):
 
-    if category not in QUESTIONS_DATA:
+    category_data = (
+        get_category_data(
+            category
+        )
+    )
 
-        abort(404)
+    exams_data = (
+        category_data.get(
+            "exams",
+            {}
+        )
+    )
 
-    exams_data = QUESTIONS_DATA[
-        category
-    ]
+    category_label = (
+        category_data.get(
+            "label",
+            CATEGORY_LABELS.get(
+                category,
+                category.title()
+            )
+        )
+    )
+
+    exam_list = []
+
+    for exam_name in exams_data:
+
+        questions = (
+            get_exam_questions(
+                category,
+                exam_name
+            )
+        )
+
+        exam_list.append({
+            "name": exam_name,
+            "total": len(questions)
+        })
 
     return render_template(
         "exams.html",
         category=category,
-        category_label=CATEGORY_LABELS.get(
-            category,
-            category.title()
-        ),
-        exams=exams_data
+        category_label=category_label,
+        exams=exam_list
     )
 
 
-# =========================
-# SUBJECTS
-# =========================
+# =========================================================
+# EXAM → SUBJECT/PREVIEW
+# =========================================================
 
 @app.route(
     "/category/<category>/exam/<path:exam>"
 )
 @login_required
-def subjects(category, exam):
+def subjects(
+    category,
+    exam
+):
 
-    if category not in QUESTIONS_DATA:
+    category_data = (
+        get_category_data(
+            category
+        )
+    )
 
-        abort(404)
+    questions = (
+        get_exam_questions(
+            category,
+            exam
+        )
+    )
 
-    if exam not in QUESTIONS_DATA[category]:
+    category_label = (
+        category_data.get(
+            "label",
+            CATEGORY_LABELS.get(
+                category,
+                category.title()
+            )
+        )
+    )
 
-        abort(404)
+    # Current JSON has:
+    #
+    # category
+    #     ↓
+    # exams
+    #     ↓
+    # exam name
+    #     ↓
+    # questions
+    #
+    # There is no separate "subject"
+    # field in the current JSON.
+    #
+    # Therefore the exam itself is
+    # treated as the quiz/subject.
 
-    subjects_data = QUESTIONS_DATA[
-        category
-    ][exam]
+    subject = {
+        "name": exam,
+        "total": len(questions)
+    }
 
     return render_template(
         "subjects.html",
         category=category,
-        category_label=CATEGORY_LABELS.get(
-            category,
-            category.title()
-        ),
+        category_label=category_label,
         exam=exam,
-        subjects=subjects_data
+        subjects=[subject]
     )
 
 
-# =========================
+# =========================================================
 # START TEST
-# =========================
+# =========================================================
 
 @app.route(
     "/category/<category>/exam/<path:exam>/subject/<path:subject>"
@@ -450,15 +712,12 @@ def start_test(
     subject
 ):
 
-    try:
-
-        questions = QUESTIONS_DATA[
-            category
-        ][exam][subject]
-
-    except KeyError:
-
-        abort(404)
+    questions = (
+        get_exam_questions(
+            category,
+            exam
+        )
+    )
 
     if not questions:
 
@@ -470,32 +729,55 @@ def start_test(
                 category.title()
             ),
             exam=exam,
-            subjects=QUESTIONS_DATA[
-                category
-            ][exam],
-            error="Is subject mein abhi questions available nahi hain."
+            subjects=[
+                {
+                    "name": exam,
+                    "total": 0
+                }
+            ],
+            error=(
+                "Is quiz mein abhi "
+                "valid questions available nahi hain."
+            )
         )
 
-    session["category"] = category
+    # IMPORTANT:
+    #
+    # Pura question list session mein
+    # store nahi kar rahe.
+    #
+    # Isse large question bank ke
+    # cookie/session size ka problem
+    # nahi hoga.
 
-    session["exam"] = exam
+    session["quiz_category"] = (
+        category
+    )
 
-    session["subject"] = subject
+    session["quiz_exam"] = (
+        exam
+    )
 
-    session["quiz"] = questions
+    session["quiz_subject"] = (
+        subject
+    )
 
     session["score"] = 0
 
     session["q_index"] = 0
+
+    session["quiz_total"] = (
+        len(questions)
+    )
 
     return redirect(
         url_for("question")
     )
 
 
-# =========================
+# =========================================================
 # QUESTION
-# =========================
+# =========================================================
 
 @app.route(
     "/question",
@@ -504,26 +786,74 @@ def start_test(
 @login_required
 def question():
 
-    quiz = session.get(
-        "quiz"
+    category = session.get(
+        "quiz_category"
     )
 
-    if not quiz:
+    exam = session.get(
+        "quiz_exam"
+    )
+
+    subject = session.get(
+        "quiz_subject"
+    )
+
+    if not category or not exam:
 
         return redirect(
             url_for("index")
         )
 
-    q_index = session.get(
-        "q_index",
-        0
+    questions = (
+        get_exam_questions(
+            category,
+            exam
+        )
     )
 
-    if q_index >= len(quiz):
+    if not questions:
 
-        final_score = session.get(
-            "score",
+        session.pop(
+            "quiz_category",
+            None
+        )
+
+        session.pop(
+            "quiz_exam",
+            None
+        )
+
+        session.pop(
+            "quiz_subject",
+            None
+        )
+
+        return redirect(
+            url_for("index")
+        )
+
+    total = len(questions)
+
+    session["quiz_total"] = total
+
+    q_index = int(
+        session.get(
+            "q_index",
             0
+        )
+    )
+
+    # =====================================================
+    # QUIZ FINISHED
+    # =====================================================
+
+    if q_index >= total:
+
+        final_score = int(
+            session.get(
+                "score",
+                0
+            )
         )
 
         save_best_score(
@@ -533,12 +863,17 @@ def question():
         return render_template(
             "result.html",
             score=final_score,
-            total=len(quiz)
+            total=total
         )
 
-    current_question = quiz[
-        q_index
-    ]
+
+    # =====================================================
+    # CURRENT QUESTION
+    # =====================================================
+
+    current_question = (
+        questions[q_index]
+    )
 
     if request.method == "POST":
 
@@ -546,20 +881,26 @@ def question():
             "option"
         )
 
-        correct_answer = current_question.get(
-            "answer"
+        correct_answer = (
+            current_question.get(
+                "answer",
+                ""
+            )
         )
 
-        is_correct = (
-            selected == correct_answer
+        is_correct = answers_match(
+            selected,
+            correct_answer
         )
 
         if is_correct:
 
             session["score"] = (
-                session.get(
-                    "score",
-                    0
+                int(
+                    session.get(
+                        "score",
+                        0
+                    )
                 ) + 1
             )
 
@@ -569,7 +910,9 @@ def question():
 
             "selected": selected,
 
-            "correct_answer": correct_answer
+            "correct_answer": (
+                correct_answer
+            )
         }
 
         session["q_index"] = (
@@ -578,46 +921,55 @@ def question():
 
         return render_template(
             "answer_feedback.html",
-            feedback=session[
-                "last_feedback"
-            ],
+            feedback=(
+                session[
+                    "last_feedback"
+                ]
+            ),
             q_index=q_index + 1,
-            total=len(quiz)
+            total=total
         )
+
+
+    # =====================================================
+    # SHOW QUESTION
+    # =====================================================
 
     return render_template(
         "question.html",
+
         question=current_question.get(
             "q",
             ""
         ),
+
         options=current_question.get(
             "options",
             []
         ),
+
         q_number=q_index + 1,
-        total=len(quiz),
+
+        total=total,
+
         time_limit=TIME_PER_QUESTION,
-        category_label=CATEGORY_LABELS.get(
-            session.get(
-                "category"
-            ),
-            ""
+
+        category_label=(
+            CATEGORY_LABELS.get(
+                category,
+                category.title()
+            )
         ),
-        exam=session.get(
-            "exam",
-            ""
-        ),
-        subject=session.get(
-            "subject",
-            ""
-        )
+
+        exam=exam,
+
+        subject=subject
     )
 
 
-# =========================
+# =========================================================
 # BEST SCORE
-# =========================
+# =========================================================
 
 def save_best_score(score):
 
@@ -644,7 +996,10 @@ def save_best_score(score):
 
         user = cur.fetchone()
 
-        if user and score > user["best_score"]:
+        if (
+            user
+            and score > user["best_score"]
+        ):
 
             cur.execute(
                 """
@@ -665,9 +1020,9 @@ def save_best_score(score):
         conn.close()
 
 
-# =========================
+# =========================================================
 # NOTES
-# =========================
+# =========================================================
 
 @app.route(
     "/notes",
@@ -687,7 +1042,9 @@ def notes():
 
         if not text:
 
-            error = "Note likhna zaroori hai."
+            error = (
+                "Note likhna zaroori hai."
+            )
 
         else:
 
@@ -723,6 +1080,7 @@ def notes():
                 url_for("notes")
             )
 
+
     conn = get_db()
 
     try:
@@ -744,6 +1102,7 @@ def notes():
 
         conn.close()
 
+
     return render_template(
         "notes.html",
         notes=all_notes,
@@ -751,11 +1110,13 @@ def notes():
     )
 
 
-# =========================
+# =========================================================
 # LEADERBOARD
-# =========================
+# =========================================================
 
-@app.route("/leaderboard")
+@app.route(
+    "/leaderboard"
+)
 @login_required
 def leaderboard():
 
@@ -780,15 +1141,16 @@ def leaderboard():
 
         conn.close()
 
+
     return render_template(
         "leaderboard.html",
         top_users=top_users
     )
 
 
-# =========================
+# =========================================================
 # HEALTH CHECK
-# =========================
+# =========================================================
 
 @app.route("/health")
 def health():
@@ -798,9 +1160,9 @@ def health():
     }
 
 
-# =========================
-# RUN APP
-# =========================
+# =========================================================
+# RUN
+# =========================================================
 
 if __name__ == "__main__":
 
