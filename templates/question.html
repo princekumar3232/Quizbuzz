@@ -13,13 +13,11 @@ Question {{ q_number }}
         {{ category_label }}
 
         {% if exam %}
-            <br>
-            {{ exam }}
+            · {{ exam }}
         {% endif %}
 
         {% if subject %}
-            <br>
-            {{ subject }}
+            · {{ subject }}
         {% endif %}
 
         <br><br>
@@ -28,30 +26,17 @@ Question {{ q_number }}
 
     </p>
 
-
-    <!-- TIMER -->
-
     <p class="timer">
-
         ⏱️ Time Left:
-
         <span id="timeLeft">
             {{ time_limit }}
         </span>
-
         seconds
-
     </p>
-
-
-    <!-- QUESTION -->
 
     <h3>
         {{ question }}
     </h3>
-
-
-    <!-- ANSWER FORM -->
 
     <form
         method="POST"
@@ -75,7 +60,6 @@ Question {{ q_number }}
 
         {% endfor %}
 
-
         <button
             type="submit"
             class="full-btn"
@@ -98,31 +82,33 @@ const timerElement =
 const formElement =
     document.getElementById("quizForm");
 
-
 const timer = setInterval(function () {
 
     timeLeft--;
 
-    timerElement.textContent =
-        timeLeft;
-
+    timerElement.textContent = timeLeft;
 
     if (timeLeft <= 0) {
 
         clearInterval(timer);
 
         /*
-         * Timer khatam hone par
-         * answer automatically submit hoga.
-         *
-         * form.submit() browser ki
-         * required validation ko bypass karta hai,
-         * isliye bina answer ke bhi next question
-         * par ja sakta hai.
+         * Time khatam hone par
+         * automatically next question.
          */
 
-        formElement.submit();
+        const hiddenInput =
+            document.createElement("input");
 
+        hiddenInput.type = "hidden";
+        hiddenInput.name = "option";
+        hiddenInput.value = "";
+
+        formElement.appendChild(
+            hiddenInput
+        );
+
+        formElement.submit();
     }
 
 }, 1000);
