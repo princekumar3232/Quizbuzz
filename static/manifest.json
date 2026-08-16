@@ -1,13 +1,11 @@
 {
   "name": "QuizBuzz",
   "short_name": "QuizBuzz",
-  "description": "QuizBuzz Online Quiz and Exam Practice App",
   "start_url": "/",
-  "scope": "/",
   "display": "standalone",
   "background_color": "#f4f5fb",
   "theme_color": "#833ab4",
-  "orientation": "portrait",
+  "description": "QuizBuzz Online Quiz and Exam Practice App",
   "icons": [
     {
       "src": "/static/icon-192.png",
