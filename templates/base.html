@@ -26,18 +26,18 @@
         href="{{ url_for('static', filename='manifest.json') }}"
     >
 
-    <!-- Favicon -->
+    <!-- Browser Icon -->
     <link
         rel="icon"
         type="image/png"
         sizes="32x32"
-        href="{{ url_for('static', filename='favicon-32.png') }}"
+        href="{{ url_for('static', filename='icon-192.png') }}"
     >
 
-    <!-- Apple / Mobile Icon -->
+    <!-- Mobile / Apple Icon -->
     <link
         rel="apple-touch-icon"
-        href="{{ url_for('static', filename='apple-touch-icon.png') }}"
+        href="{{ url_for('static', filename='icon-192.png') }}"
     >
 
     <meta
@@ -47,13 +47,22 @@
 
 </head>
 
+
 <body>
+
 
 <nav class="navbar">
 
     <div class="logo">
-        🎯 QuizBuzz
+
+        <span class="logo-icon">
+            ⚡
+        </span>
+
+        QuizBuzz
+
     </div>
+
 
     {% if session.get("user_id") %}
 
@@ -94,24 +103,35 @@
 
 if ("serviceWorker" in navigator) {
 
-    window.addEventListener("load", function () {
+    window.addEventListener(
+        "load",
+        function () {
 
-        navigator.serviceWorker.register(
-            "{{ url_for('static', filename='service-worker.js') }}"
-        ).catch(function(error) {
+            navigator.serviceWorker
+                .register(
+                    "{{ url_for(
+                        'static',
+                        filename='service-worker.js'
+                    ) }}"
+                )
+                .catch(
+                    function (error) {
 
-            console.log(
-                "Service Worker registration failed:",
-                error
-            );
+                        console.log(
+                            "Service Worker error:",
+                            error
+                        );
 
-        });
+                    }
+                );
 
-    });
+        }
+    );
 
 }
 
 </script>
+
 
 </body>
 
