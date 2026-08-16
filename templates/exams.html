@@ -1,54 +1,98 @@
 {% extends "base.html" %}
 
+
 {% block title %}
+
 {{ category_label }}
+
 {% endblock %}
+
 
 {% block content %}
 
-<div class="card">
 
-    <h2>{{ category_label }}</h2>
+<div class="page-header">
 
-    <p>
-        Exam select karo.
-    </p>
+    <div>
 
-    {% if exams %}
+        <p class="eyebrow">
+            QUIZBUZZ
+        </p>
 
-    <div class="exam-grid">
+        <h1>
+            {{ category_label }}
+        </h1>
 
-        {% for exam_name, subjects in exams.items() %}
-
-        <a
-            class="exam-card"
-            href="{{ url_for(
-                'subjects',
-                category=category,
-                exam=exam_name
-            ) }}"
-        >
-
-            📚 {{ exam_name }}
-
-            <br><br>
-
-            {{ subjects|length }} Subjects
-
-        </a>
-
-        {% endfor %}
+        <p class="subtitle">
+            Apna exam / quiz select karo.
+        </p>
 
     </div>
 
-    {% else %}
+</div>
 
-        <p>
-            Abhi exams available nahi hain.
-        </p>
 
-    {% endif %}
+{% if exams %}
+
+<div class="exam-grid">
+
+
+    {% for exam_name, exam_data in exams.items() %}
+
+
+    <a
+        class="exam-card"
+        href="{{ url_for(
+            'subjects',
+            category=category,
+            exam=exam_name
+        ) }}"
+    >
+
+        <div class="exam-icon">
+            📚
+        </div>
+
+
+        <div class="exam-title">
+
+            {{ exam_name }}
+
+        </div>
+
+
+        <div class="exam-arrow">
+
+            Start →
+            
+        </div>
+
+    </a>
+
+
+    {% endfor %}
+
 
 </div>
+
+
+{% else %}
+
+
+<div class="empty-card">
+
+    <h3>
+        No exams available
+    </h3>
+
+    <p>
+        Is category mein abhi exam available nahi hai.
+    </p>
+
+</div>
+
+
+{% endif %}
+
 
 {% endblock %}
