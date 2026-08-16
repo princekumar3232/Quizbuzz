@@ -34,8 +34,7 @@ QUESTIONS_FILE = BASE_DIR / "static" / "questions.json"
 
 DATABASE_FILE = BASE_DIR / "quizapp.db"
 
-# Har question ke liye 10 seconds
-TIME_PER_QUESTION = 10
+TIME_PER_QUESTION = 30
 
 
 CATEGORY_LABELS = {
@@ -70,14 +69,69 @@ def init_db():
 
         cur = conn.cursor()
 
+        # =========================
+        # USERS TABLE
+        # =========================
+
         cur.execute("""
             CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 username TEXT UNIQUE NOT NULL,
+                email TEXT,
+                mobile TEXT,
                 password_hash TEXT NOT NULL,
                 best_score INTEGER NOT NULL DEFAULT 0
             )
         """)
+
+        # =========================
+        # ADD NEW COLUMNS TO OLD DB
+        # =========================
+
+        existing_columns = {
+            row["name"]
+            for row in cur.execute(
+                "PRAGMA table_info(users)"
+            ).fetchall()
+        }
+
+        if "email" not in existing_columns:
+
+            cur.execute(
+                "ALTER TABLE users ADD COLUMN email TEXT"
+            )
+
+        if "mobile" not in existing_columns:
+
+            cur.execute(
+                "ALTER TABLE users ADD COLUMN mobile TEXT"
+            )
+
+        # =========================
+        # UNIQUE EMAIL
+        # =========================
+
+        cur.execute("""
+            CREATE UNIQUE INDEX IF NOT EXISTS
+            idx_users_email
+            ON users(email)
+            WHERE email IS NOT NULL
+        """)
+
+        # =========================
+        # UNIQUE MOBILE
+        # =========================
+
+        cur.execute("""
+            CREATE UNIQUE INDEX IF NOT EXISTS
+            idx_users_mobile
+            ON users(mobile)
+            WHERE mobile IS NOT NULL
+        """)
+
+        # =========================
+        # NOTES TABLE
+        # =========================
 
         cur.execute("""
             CREATE TABLE IF NOT EXISTS notes (
@@ -203,16 +257,52 @@ def register():
             ""
         ).strip()
 
+        email = request.form.get(
+            "email",
+            ""
+        ).strip().lower()
+
+        mobile = request.form.get(
+            "mobile",
+            ""
+        ).strip()
+
         password = request.form.get(
             "password",
             ""
         )
 
-        if not username or not password:
+        # =========================
+        # REQUIRED FIELDS
+        # =========================
+
+        if not username or not email or not mobile or not password:
 
             return render_template(
                 "register.html",
                 error="Sabhi fields bharna zaroori hai."
+            )
+
+        # =========================
+        # EMAIL VALIDATION
+        # =========================
+
+        if "@" not in email or "." not in email:
+
+            return render_template(
+                "register.html",
+                error="Please valid email address enter karein."
+            )
+
+        # =========================
+        # MOBILE VALIDATION
+        # =========================
+
+        if not mobile.isdigit() or len(mobile) != 10:
+
+            return render_template(
+                "register.html",
+                error="Mobile number 10 digits ka hona chahiye."
             )
 
         conn = get_db()
@@ -220,6 +310,10 @@ def register():
         try:
 
             cur = conn.cursor()
+
+            # =========================
+            # USERNAME CHECK
+            # =========================
 
             cur.execute(
                 """
@@ -237,16 +331,64 @@ def register():
                     error="Ye username pehle se registered hai."
                 )
 
+            # =========================
+            # EMAIL CHECK
+            # =========================
+
+            cur.execute(
+                """
+                SELECT id
+                FROM users
+                WHERE LOWER(email)=LOWER(?)
+                """,
+                (email,)
+            )
+
+            if cur.fetchone():
+
+                return render_template(
+                    "register.html",
+                    error="Ye email pehle se registered hai."
+                )
+
+            # =========================
+            # MOBILE CHECK
+            # =========================
+
+            cur.execute(
+                """
+                SELECT id
+                FROM users
+                WHERE mobile=?
+                """,
+                (mobile,)
+            )
+
+            if cur.fetchone():
+
+                return render_template(
+                    "register.html",
+                    error="Ye mobile number pehle se registered hai."
+                )
+
+            # =========================
+            # CREATE USER
+            # =========================
+
             cur.execute(
                 """
                 INSERT INTO users(
                     username,
+                    email,
+                    mobile,
                     password_hash
                 )
-                VALUES(?, ?)
+                VALUES(?, ?, ?, ?)
                 """,
                 (
                     username,
+                    email,
+                    mobile,
                     generate_password_hash(
                         password
                     )
@@ -254,6 +396,13 @@ def register():
             )
 
             conn.commit()
+
+        except sqlite3.IntegrityError:
+
+            return render_template(
+                "register.html",
+                error="Email ya mobile number pehle se registered hai."
+            )
 
         finally:
 
@@ -520,11 +669,6 @@ def question():
         0
     )
 
-    # =========================
-    # FINAL RESULT
-    # =========================
-
-    # Result sirf saare questions complete hone ke baad aayega.
     if q_index >= len(quiz):
 
         final_score = session.get(
@@ -545,10 +689,6 @@ def question():
     current_question = quiz[
         q_index
     ]
-
-    # =========================
-    # ANSWER SUBMIT
-    # =========================
 
     if request.method == "POST":
 
@@ -573,44 +713,60 @@ def question():
                 ) + 1
             )
 
-        # Agla question
+        session["last_feedback"] = {
+
+            "is_correct": is_correct,
+
+            "selected": selected,
+
+            "correct_answer": correct_answer
+
+        }
+
         session["q_index"] = (
             q_index + 1
         )
 
-        # Har answer ke baad result/feedback page nahi.
-        # Seedha agla question.
-        return redirect(
-            url_for("question")
+        return render_template(
+            "answer_feedback.html",
+            feedback=session[
+                "last_feedback"
+            ],
+            q_index=q_index + 1,
+            total=len(quiz)
         )
-
-    # =========================
-    # SHOW QUESTION
-    # =========================
 
     return render_template(
         "question.html",
+
         question=current_question.get(
             "q",
             ""
         ),
+
         options=current_question.get(
             "options",
             []
         ),
+
         q_number=q_index + 1,
+
         total=len(quiz),
+
         time_limit=TIME_PER_QUESTION,
+
         category_label=CATEGORY_LABELS.get(
             session.get(
                 "category"
             ),
             ""
         ),
+
         exam=session.get(
             "exam",
             ""
         ),
+
         subject=session.get(
             "subject",
             ""
