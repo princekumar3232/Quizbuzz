@@ -6,24 +6,24 @@ Checkpoint
 
 {% block content %}
 
-<div class="checkpoint-card">
+<div class="checkpoint-card" style="text-align: center; padding: 40px; background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); max-width: 500px; margin: 40px auto;">
 
-    <h2>🎯 Checkpoint</h2>
+    <h2 style="color: #833ab4; margin-bottom: 15px;">🎯 Quiz Checkpoint</h2>
 
-    <p>
-        {{ q_index }} questions complete.
+    <p style="font-size: 18px; color: #555; margin-bottom: 10px;">
+        You have successfully completed <strong>{{ q_index }}</strong> questions!
     </p>
 
-    <h3>
-        Current Score:
-        {{ score }}
+    <h3 style="font-size: 24px; color: #333; margin-bottom: 25px;">
+        Current Score: <span style="color: #28a745;">{{ score }}</span>
     </h3>
 
     <a
-        class="btn"
+        class="btn full-btn"
         href="{{ url_for('question') }}"
+        style="display: inline-block; background: #833ab4; color: white; padding: 12px 25px; text-decoration: none; border-radius: 6px; font-weight: bold;"
     >
-        Continue →
+        Continue to Next Questions →
     </a>
 
 </div>
